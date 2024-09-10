@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Trabajos de Grado</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>Título</th>
+        <th>Nombre</th>
+        <th>Apellido</th>
+        <th>Resumen</th>
+        <th>Archivo</th>
+        <th>Fecha de Publicación</th>
+        <th>Palabras Clave</th>
+        <th>Tutor</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for trabajo in trabajos %}
+      <tr>
+        <td>{{ trabajo.titulo }}</td>
+        <td>{{ trabajo.nombre }}</td>
+        <td>{{ trabajo.apellido }}</td>
+        <td>{{ trabajo.resumen|truncatechars:100 }}</td>
+        <td><a href="{{ trabajo.archivo.url }}">Descargar</a></td>
+        <td>{{ trabajo.fecha_publicacion }}</td>
+        <td>{{ trabajo.palabras_clave }}</td>
+        <td>{{ trabajo.tutor }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
+
