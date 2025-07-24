@@ -1,11 +1,10 @@
-from django.conf import settings
 from django.shortcuts import render, redirect
-import fitz  # PyMuPDF
+import fitz
 from django.views.generic.edit import UpdateView
-from django.views.generic import CreateView, ListView, DetailView, DeleteView, View
+
 from .models import Documento
 from .forms import DocumentoForm
-from django.http import HttpResponse, JsonResponse
+
 from django.urls import reverse_lazy
 from django.db.models import Q
 import re

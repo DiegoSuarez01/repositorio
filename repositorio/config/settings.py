@@ -1,5 +1,5 @@
 
-import os  # Asegúrate de importar esto
+import os  # AsegÃºrate de importar esto
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -13,9 +13,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-*w86)9o7e()t7da#h!=a%+=lq^-g6ku6zqj+&3g)ci%(n3za&@'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS =  ['localhost',
+    '127.0.0.1',
+    'repositoriodte.onrender.com',  # ← tu dominio en Render
+]
 
 
 # Application definition
@@ -48,7 +51,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],                # DIRS está configurado para incluir el directorio templates
+        'DIRS': [BASE_DIR / 'templates'],                # DIRS estÃ¡ configurado para incluir el directorio templates
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -112,7 +115,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = '/static/'
-
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
@@ -128,9 +131,9 @@ LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 """
-MEDIA_URL: Es la URL pública a través de la cual se podrá acceder a los archivos subidos. En este caso, será /media/.
-MEDIA_ROOT: Es la ubicación en el servidor donde se almacenarán físicamente los archivos. 
-            Aquí se configura para que los archivos se almacenen en una carpeta media dentro 
+MEDIA_URL: Es la URL pÃºblica a travÃ©s de la cual se podrÃ¡ acceder a los archivos subidos. En este caso, serÃ¡ /media/.
+MEDIA_ROOT: Es la ubicaciÃ³n en el servidor donde se almacenarÃ¡n fÃ­sicamente los archivos. 
+            AquÃ­ se configura para que los archivos se almacenen en una carpeta media dentro 
             del directorio base del proyecto.
 Uso: Esto permite que los archivos subidos, como los trabajos de grado, se almacenen y sean accesibles 
     desde el servidor web.
