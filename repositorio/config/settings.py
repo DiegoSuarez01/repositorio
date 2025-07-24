@@ -32,8 +32,18 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'crispy_forms',  # Agregar esta linea
     'crispy_bootstrap4',
-    'repositorio'                                          
+    'repositorio'      
+    'cloudinary',
+    'cloudinary_storage',                                    
 ]
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
