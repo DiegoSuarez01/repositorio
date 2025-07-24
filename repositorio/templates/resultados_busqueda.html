@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <style>
+    .document-card {
+        border: 3px solid #00796b;
+        border-radius: 10px;
+        transition: box-shadow 0.3s ease-in-out;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        padding: 15px;
+        background-color: #ffffff;
+        margin-bottom: 20px;
+    }
+
+    .document-card:hover {
+        box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .document-title {
+        font-size: 20px;
+        font-weight: bold;
+        color: #00796b;
+        margin-bottom: 8px;
+    }
+
+    .document-info {
+        margin-bottom: 4px;
+    }
+
+    .document-label {
+        font-weight: bold;
+        color: #444;
+    }
+
+    .document-value {
+        color: #333;
+    }
+
+    .document-keywords {
+        background-color: #e0f2f1;
+        padding: 4px 8px;
+        border-radius: 5px;
+        display: inline-block;
+        margin-right: 5px;
+        margin-bottom: 5px;
+    }
+
+    .no-result {
+        color: #c62828;
+        font-weight: bold;
+        margin-top: 20px;
+    }
+  </style>
+
+  <div class="container mx-auto p-6 bg-white shadow-md rounded-md">
+    <h2 class="text-2xl font-bold mb-6">
+      Resultados para "<span class="text-blue-600">{{ query }}</span>"
+    </h2>
+
+    {% if resultados %}
+      <div class="grid grid-cols-1 gap-6">
+        {% for doc in resultados %}
+          <div class="document-card">
+            <div class="document-title">
+              <a href="{% url 'documento_detalle' doc.pk %}" class="hover:underline">
+                {{ doc.titulo }}
+              </a>
+            </div>
+
+            <div class="document-info">
+              <span class="document-label">Autor(es): </span>
+              <span class="document-value">{{ doc.autor|default:"No disponible" }}</span>
+            </div>
+
+            <div class="document-info">
+              <span class="document-label">Director: </span>
+              <span class="document-value">{{ doc.director|default:"No registrado" }}</span>
+            </div>
+            <div class="document-info">
+              <span class="document-label">Año: </span>
+              <span class="document-value">{{ doc.año|default:"No registrado" }}</span>
+            </div>
+
+            <div class="document-info">
+              <span class="document-label">Metodología: </span>
+              <span class="document-value">{{ doc.metodologia|default:"No registrado" }}</span>
+            </div>
+
+            <div class="document-info">
+              <span class="document-label">Categoría: </span>
+              <span class="document-value">{{ doc.categoria|default:"Sin categoría" }}</span>
+            </div>
+
+            <div class="document-info">
+              <span class="document-label">Líneas de investigación: </span>
+              {% if doc.lineas_investigacion.all %}
+                <ul class="list-disc list-inside text-sm mt-1">
+                  {% for linea in doc.lineas_investigacion.all %}
+                    <li>{{ linea.nombre }}</li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <span class="text-gray-500">No clasificadas</span>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="no-result">No se encontraron resultados.</p>
+    {% endif %}
+  </div>
+{% endblock %}

@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<!-- Enlaza Font Awesome y Material Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+
+<style>
+  body {
+    background-color: #e0f7fa; /* Azul claro */
+    font-family: Arial, sans-serif;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    color: white        ;
+  }
+
+  .header h1 {
+    margin: 0;
+    color: #013220; /* Título en blanco */
+    font-size: 45px;
+  }
+
+  .header img {
+    width: 150px;
+    height: auto;
+  }
+
+  table {
+    width: 100%;
+    border: 2px solid #004d40;
+    border-collapse: collapse;
+    background-color: white;
+  }
+
+  th, td {
+    border: 1px solid #004d40;
+    padding: 15px;
+    text-align: left;
+  }
+
+  th {
+    background-color: #00796b;
+    color: white;
+    text-align: center;
+  }
+
+  td {
+    color: #004d40;
+    word-wrap: break-word; /* Permite saltos de línea */
+    overflow-wrap: break-word; /* Alternativa para compatibilidad */
+    white-space: normal; /* Asegura que no se mantengan en una sola línea */
+    max-width: 1000px; /* Ajusta el ancho máximo para evitar desbordes */
+  }
+  td ul {
+    list-style-type: disc; /* Aplica viñetas */
+    padding-left: 20px; /* Espaciado a la izquierda */
+    text-align: left; /* Asegura alineación a la izquierda */
+    display: block; /* Asegura que la lista se muestre en bloque */
+    }
+
+  .delete-button {
+    background-color: #e57373;
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    width: 100%;
+  }
+
+  .delete-button:hover {
+    background-color: #d32f2f;
+  }
+
+  .download-link {
+    display: flex;
+    align-items: center;
+  }
+
+  .download-link i {
+    margin-right: 5px;
+  }
+
+  .section-title {
+    font-weight: bold;
+    text-decoration: underline;
+    color: #00796b;
+  }
+
+  .content-box {
+    background-color: #f1f8e9;
+    padding: 10px;
+    border-radius: 5px;
+  }
+  .titulo-marca-agua {
+        position: relative;
+        display: inline-block;
+        color: #013220;
+        font-size: 45px;
+        text-align: center;
+        padding: 60px;
+        background-color: #f0fff0; 
+        border-radius: 10px;
+        width: 100%;
+        font-weight: bold;
+        z-index: 2; /* Asegura que el texto está sobre la imagen */
+    }
+    
+    /* Marca de agua */
+    .titulo-marca-agua::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 15%;
+        transform: translate(-50%, -50%);
+        background: url("https://cienciaytecnologia.upn.edu.co/wp-content/uploads/2023/04/DTE-11.png") no-repeat center;
+        background-size: 350px 150px;
+        width: 100%; /* Ajusta el tamaño de la imagen */
+        height: 100%;
+        opacity: 0.2; /* Ajusta la transparencia */
+        z-index: -1; /* Coloca la imagen detrás del texto */
+    }
+
+       
+</style>
+
+<div class="header">
+  <h1 class="titulo-marca-agua">Detalle del Documento</h1>
+  <img src="https://www.upn.edu.co/wp-content/uploads/2023/07/Logo-blanco-fondo-azul-UPN.jpg">
+  
+</div>
+
+<table>
+  <tr>
+     <tr>
+        <th>TÍTULO</th>
+        <td>{{ object.titulo|default:"No disponible" }}</td>
+      </tr>
+      <tr>
+        <th>AUTOR(ES)</th>
+        <td>{{ object.autor|default:"No disponible" }}</td>
+      </tr>
+      <tr>
+        <th>DIRECTOR</th>
+        <td>{{ object.director|default:"No registrado" }}</td>
+      </tr>
+      <tr>
+        <th>PALABRAS CLAVE</th>
+        <td>{{ object.palabras_clave|default:"No disponibles" }}</td>
+      </tr>
+      <tr>
+        <th>UNIDAD PATROCINANTE</th>
+        <td>{{ object.unidad_patrocinante|default:"No disponible" }}</td>
+      </tr>
+      <tr>
+        <th>PUBLICACIÓN</th>
+        <td>{{ object.publicacion|default:"No disponible" }}</td>
+      </tr>
+      <tr>
+          <th>AÑO</th>
+          <td>{{ object.año|default:"No disponible" }}</td>
+        </tr>
+      <tr>
+        <th>DESCRIPCIÓN</th>
+        <td class="content-box">{{ object.descripcion|default:"No disponible" }}</td>
+      </tr>
+      <tr>
+        <th>METODOLOGÍA</th>
+        <td class="content-box">{{ object.metodologia|default:"No disponible" }}</td>
+      </tr>
+      <tr>
+        <th>CONTENIDOS</th>
+        <td class="content-box">{{ object.contenidos|default:"No disponible" }}</td>
+      </tr>
+      <tr>
+        <th>CONCLUSIONES</th>
+        <td class="content-box">{{ object.conclusiones|default:"No disponible" }}</td>
+      </tr>
+       <tr>
+          <th>LÍNEAS DE INVESTIGACIÓN</th>
+          <td>
+            {% if object.lineas_investigacion.exists %}
+              <div class="research-lines">
+                  {% for linea in object.lineas_investigacion.all %}
+                    <div style="margin-bottom: 4px;">
+                      {% if linea.nombre == "Análisis Técnica" %}
+                        <i class="fas fa-chart-line" title="{{ linea.nombre }}"></i> {{ linea.nombre }}
+                      {% elif linea.nombre == "EduTech" %}
+                        <i class="fas fa-laptop-code" title="{{ linea.nombre }}"></i> {{ linea.nombre }}
+                      {% elif linea.nombre == "Experiencias ETIAE/MTIAE" %}
+                        <i class="fas fa-users" title="{{ linea.nombre }}"></i> {{ linea.nombre }}
+                      {% elif linea.nombre == "Productos – Prototipos – Tecnológicos" %}
+                        <i class="fas fa-cogs" title="{{ linea.nombre }}"></i> {{ linea.nombre }}
+                      {% elif linea.nombre == "Sistemas de Control" %}
+                        <i class="fas fa-sliders-h" title="{{ linea.nombre }}"></i> {{ linea.nombre }}
+                      {% elif linea.nombre == "Tecnologías Digitales" %}
+                        <i class="fas fa-microchip" title="{{ linea.nombre }}"></i> {{ linea.nombre }}
+                      {% elif linea.nombre == "Diseño de Prototipos" %}
+                        <i class="fas fa-laptop-code" title="{{ linea.nombre }}"></i> {{ linea.nombre }}
+                      {% elif linea.nombre == "Educación en y con tecnología" %}
+                        <i class="fas fa-users" title="{{ linea.nombre }}"></i> {{ linea.nombre }}
+                      {% elif linea.nombre == "Herramientas Digitales" %}
+                        <i class="fas fa-sliders-h" title="{{ linea.nombre }}"></i> {{ linea.nombre }}
+                      {% elif linea.nombre == "Monografías" %}
+                        <i class="fas fa-microchip" title="{{ linea.nombre }}"></i> {{ linea.nombre }}
+                      {% elif linea.nombre == "Propuesta Disciplinar" %}
+                        <i class="fas fa-microchip" title="{{ linea.nombre }}"></i> {{ linea.nombre }}
+                      {% else %}
+                        <i class="fas fa-tag" title="{{ linea.nombre }}"></i> {{ linea.nombre }}
+                      {% endif %}
+                    </div>
+                  {% endfor %}
+                </div>
+            {% else %}
+              No clasificado
+            {% endif %}
+          </td>
+        </tr>
+      <tr>
+        <th>FUENTES</th>
+        <td class="content-box">
+            {% if object.fuentes %}
+                <ul>
+                    {% for fuente in object.fuentes.splitlines %}
+                        <li>{{ fuente }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                No disponible
+            {% endif %}
+        </td>
+      </tr>
+  
+       <th>Enlace del Documento</th>
+       <td>
+         {% if object.enlace %}
+           <a href="{{ object.enlace }}" target="_blank">{{ object.enlace }}</a>
+         {% else %}
+           No disponible
+         {% endif %}
+       </td>
+     </tr>
+     <tr>
+      <th>ARCHIVO</th>
+      <td>
+        {% if object.archivo %}
+          Si desea consultar el documento completo el enlace lo direcciona al repositorio de la Universidad Pedagógica Nacional para su respectiva consulta y descarga.
+        {% else %}
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <label for="archivo">Subir archivo:</label>
+            <input type="file" name="archivo">
+            <button type="submit">Subir</button>
+          </form>
+        {% endif %}
+      </td>
+    </tr>
+    <tr>
+    {% if user.is_authenticated %}
+      <th>Acciones</th>
+      <td>
+        <a href="{% url 'documento_editar' object.pk %}" class="edit-button">
+          <i class="fas fa-edit"></i> Editar
+        </a>
+
+        <form method="POST" action="{% url 'documento_confirmar_eliminar' object.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="delete-button">
+            <i class="fas fa-trash-alt"></i> Eliminar
+          </button>
+        </form>
+      </td>
+    {% endif %}
+    </tr>
+  </table>
+
+  {% endblock %}

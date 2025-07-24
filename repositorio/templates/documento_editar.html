@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1 class="text-center mt-4 text-primary">✏️ Editar Documento</h1>
+
+    {% if form.errors %}
+    <div class="alert alert-danger">
+        <ul>
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="card shadow-lg">
+        <div class="card-body">
+            <form method="POST" class="needs-validation" novalidate>
+                {% csrf_token %}
+
+                <!-- 🔹 Categoría -->
+                <div class="col-md-6 form-floating mb-3">
+                    {{ form.categoria }}
+                    <label for="{{ form.categoria.id_for_label }}">📂 Categoría *</label>
+                </div>
+
+                <!-- 🔹 Información básica -->
+                <div class="row">
+                    <div class="col-md-6 form-floating mb-3">
+                        {{ form.titulo }}
+                        <label for="{{ form.titulo.id_for_label }}">📖 Título</label>
+                    </div>
+                    <div class="col-md-6 form-floating mb-3">
+                        {{ form.autor }}
+                        <label for="{{ form.autor.id_for_label }}">✍ Autor(es)</label>
+                    </div>
+                    <div class="col-md-6 form-floating mb-3">
+                        {{ form.director }}
+                        <label for="{{ form.director.id_for_label }}">🎓 Director</label>
+                    </div>
+                    <div class="col-md-6 form-floating mb-3">
+                        {{ form.publicacion }}
+                        <label for="{{ form.publicacion.id_for_label }}">📅 Publicación</label>
+                    </div>
+                    <div class="col-md-6 form-floating mb-3">
+                        {{ form.unidad_patrocinante }}
+                        <label for="{{ form.unidad_patrocinante.id_for_label }}"> Unidad Patrocinante</label>
+                    </div>
+                    <div class="col-md-6 form-floating mb-3">
+                        {{ form.palabras_clave }}
+                        <label for="{{ form.palabras_clave.id_for_label }}">Palabras Clave</label>
+                    </div>
+                </div>
+
+                <!-- 🔹 Contenido del documento -->
+                <div class="row">
+                    <div class="col-md-6 form-floating mb-3">
+                        {{ form.descripcion }}
+                        <label for="{{ form.descripcion.id_for_label }}">📝 Descripción</label>
+                    </div>
+                    <div class="col-md-6 form-floating mb-3">
+                        {{ form.metodologia }}
+                        <label for="{{ form.metodologia.id_for_label }}">🛠 Metodología</label>
+                    </div>
+                    <div class="col-md-6 form-floating mb-3">
+                        {{ form.conclusiones }}
+                        <label for="{{ form.conclusiones.id_for_label }}">✅ Conclusiones</label>
+                    </div>
+                    <div class="col-md-6 form-floating mb-3">
+                        {{ form.fuentes }}
+                        <label for="{{ form.fuentes.id_for_label }}">📄 Fuentes</label>
+                    </div>
+                </div>
+
+                <!-- 🔹 Contenidos -->
+                <div class="col-md-12 form-floating mb-3">
+                    {{ form.contenidos }}
+                    <label for="{{ form.contenidos.id_for_label }}">📚 Contenidos</label>
+                </div>
+
+                <!-- 🔹 Líneas de investigación -->
+                <div class="col-12 mb-4">
+                    <label class="fw-bold text-success">🧭 Líneas de Investigación</label>
+                    <div id="lineas-container" class="lineas-grid">
+                        <!-- checkboxes dinámicos -->
+                    </div>
+                </div>
+
+                <!-- 🔹 Enlace -->
+                <div class="form-group text-center mt-3">
+                    <label for="{{ form.enlace.id_for_label }}" class="form-label fw-bold">🔗 Enlace del Documento</label>
+                    {{ form.enlace }}
+                </div>
+
+                <!-- 🔹 Botones -->
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-success btn-lg px-5">💾 Guardar Cambios</button>
+                    <a href="{% url 'documento_detalle' object.pk %}" class="btn btn-secondary btn-lg">❌ Cancelar</a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 🎨 Estilos -->
+<style>
+    .lineas-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 16px;
+        background-color: #ffffff;
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #ccc;
+        box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
+        max-width: 100%;
+    }
+
+    .lineas-grid .form-check {
+        flex: 1 1 calc(50% - 16px); /* 2 columnas ajustables */
+        min-width: 220px;
+    }
+
+    .form-check-label {
+        margin-left: 5px;
+    }
+
+    @media (min-width: 768px) {
+        .lineas-grid .form-check {
+            flex: 1 1 calc(33.33% - 16px); /* en pantallas grandes, 3 columnas */
+        }
+    }
+
+    @media (max-width: 576px) {
+        .lineas-grid .form-check {
+            flex: 1 1 100%;
+        }
+    }
+</style>
+
+<!-- 🧠 Script para líneas -->
+<script>
+    const lineasPorCategoria = {
+        electronica: {{ linea_data.electronica|safe }},
+        diseno: {{ linea_data.diseno|safe }},
+        tecnologia: {{ linea_data.tecnologia|safe }}
+    };
+    
+    const seleccionadas = new Set({{ lineas_seleccionadas|safe }});
+    const categoriaSelect = document.getElementById("id_categoria");
+    const container = document.getElementById("lineas-container");
+    
+    function actualizarLineas() {
+        const categoria = categoriaSelect.value;
+        const lineas = lineasPorCategoria[categoria] || [];
+        container.innerHTML = "";
+    
+        lineas.forEach(linea => {
+            const id = `linea-${linea.id}`;
+            const checked = seleccionadas.has(linea.id) ? 'checked' : '';
+            const checkboxHTML = `
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="lineas_investigacion" id="${id}" value="${linea.id}" ${checked}>
+                    <label class="form-check-label" for="${id}">${linea.nombre}</label>
+                </div>`;
+            container.insertAdjacentHTML("beforeend", checkboxHTML);
+        });
+    }
+    
+    categoriaSelect.addEventListener("change", actualizarLineas);
+    document.addEventListener("DOMContentLoaded", actualizarLineas);
+</script>
+{% endblock %}

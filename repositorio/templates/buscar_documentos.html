@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% if query %}
+    <h3>Resultados para "{{ query }}":</h3>
+    {% if resultados %}
+        <ul>
+            {% for documento in resultados %}
+                <li>
+                    <strong>{{ documento.titulo }}</strong><br>
+                    Autor: {{ documento.autor.nombre_completo }}<br>
+                    Categoría: {{ documento.categoria }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No se encontraron resultados.</p>
+    {% endif %}
+{% endif %}

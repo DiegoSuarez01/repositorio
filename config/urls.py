@@ -1,28 +1,45 @@
-"""
-URL configuration for config project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to rlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
-
+from django.contrib import admin
 from django.urls import path
-from repositorio.views import TrabajodegradoListView, TrabajodegradoDetailView
+from django.conf import settings
+from django.conf.urls.static import static
+from django.views.generic import TemplateView
+from repositorio.views import (
+    DocumentoCreateView, DocumentoEView, DocumentoDView, DocumentoTView,
+    DocumentoDetailView, DocumentoEliminarView, login_view,
+    busqueda_ajax, principal, DocumentoUpdateView, resultados_busqueda_view
+)
 from repositorio import views
 
+from django.contrib.auth import views as auth_views
+
 urlpatterns = [
-    path('', views.TrabajodegradoDetailView.as_view(), name='base'),  # Ruta URL vacía que redirige a trabajodegrado/
-    path('trabajodegrado/', views.TrabajodegradoListView.as_view(), name='lista_trabajos'),
-]
+    path('', principal, name='principal'),
+    path('admin/', admin.site.urls),
+    path('crear/', DocumentoCreateView.as_view(), name='documento_crear'),
+    path('documentosE/', DocumentoEView.as_view(), name='lic_electronica'),
+    path('documentosD/', DocumentoDView.as_view(), name='lic_diseno'),
+    path('documentosT/', DocumentoTView.as_view(), name='lic_tecnologia'),
+    path('documento/detalle/<int:pk>/', DocumentoDetailView.as_view(), name='documento_detalle'),
+    # LOGIN
+    path('login/', login_view, name='login'),
+    path('logout/', auth_views.LogoutView.as_view(next_page='principal'), name='logout'),
+    
+    path('documento/<int:pk>/eliminar/', DocumentoEliminarView.as_view(), name='documento_confirmar_eliminar'),
+    path('busqueda/', TemplateView.as_view(template_name="buscar_documentos.html"), name="buscar_documento"),
+    path('busqueda/ajax/', busqueda_ajax, name='documento_busqueda_ajax'),
+    path('busqueda-ajax/', views.busqueda_ajax, name='busqueda_ajax'),
+    path('resultados/', resultados_busqueda_view, name='resultados_busqueda'),
+    path('documento/<int:pk>/editar/', DocumentoUpdateView.as_view(), name='documento_editar'),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+"""
+urlpatterns = [
+    path('admin/', admin.site.urls),  
+    path('subir/', subir_trabajo, name='subir_trabajo'),    
+    path('', lista_trabajos, name='lista_trabajos'),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+"""
+
+
 
 """
 if settings.DEBUG:

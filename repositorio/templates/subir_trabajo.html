@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Subir Trabajos de Grado</title>
+</head>
+<body>
+    <h1>Subir Trabajos de Grado</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="archivos" id="archivos" class="btn" accept=".pdf" multiple required>
+        <button type="submit">Subir</button>
+    </form>
+</body>
+</html>

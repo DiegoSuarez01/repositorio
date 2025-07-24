@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<!-- 🔹 Encabezado -->
+<div class="header d-flex justify-content-between align-items-center">
+  <img src="https://www.upn.edu.co/wp-content/uploads/2023/07/Logo-blanco-fondo-azul-UPN.jpg" alt="UPN Logo" class="header-logo">
+  <h1 class="titulo-marca-agua">📚 Trabajos de Grado - Licenciatura en Electrónica</h1>
+  <img src="https://cienciaytecnologia.upn.edu.co/wp-content/uploads/2023/04/DTE-11.png" alt="DTE Logo" class="header-logo">
+</div>
+
+
+<!-- 🔍 Lista de Documentos -->
+<div class="row mt-4">
+    {% if object_list %}
+        {% for documento in object_list %}
+        <div class="col-md-4">
+            <div class="document-card" onclick="window.location='{% url 'documento_detalle' documento.pk %}'">
+                <div class="card-body">
+                    <h3 class="document-title">{{ documento.titulo|default:"(Sin título)" }}</h3>
+
+                    <!-- 🔹 Muestra todas las líneas de investigación con iconos -->
+                    <div class="research-lines">
+                      {% for linea in documento.lineas_investigacion.all %}
+                        <div class="linea-item">
+                          {% if linea.nombre == "Análisis Técnica" %}
+                              <i class="fas fa-chart-line" title="{{ linea.nombre }}"></i>
+                          {% elif linea.nombre == "EduTech" %}
+                              <i class="fas fa-laptop-code" title="{{ linea.nombre }}"></i>
+                          {% elif linea.nombre == "Experiencias ETIAE/MTIAE" %}
+                              <i class="fas fa-users" title="{{ linea.nombre }}"></i>
+                          {% elif linea.nombre == "Productos – Prototipos – Tecnológicos" %}
+                              <i class="fas fa-cogs" title="{{ linea.nombre }}"></i>
+                          {% elif linea.nombre == "Sistemas de Control" %}
+                              <i class="fas fa-sliders-h" title="{{ linea.nombre }}"></i>
+                          {% elif linea.nombre == "Tecnologías Digitales" %}
+                              <i class="fas fa-microchip" title="{{ linea.nombre }}"></i>
+                          {% else %}
+                              <i class="fas fa-tag" title="{{ linea.nombre }}"></i>
+                          {% endif %}
+                          <span class="linea-nombre">{{ linea.nombre }}</span>
+                        </div>
+                      {% endfor %}
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <!-- Botón de eliminación -->
+                {% if user.is_authenticated %}
+                    <form action="{% url 'documento_confirmar_eliminar' documento.pk %}" method="POST">
+                        {% csrf_token %}
+                        <button type="submit" class="delete-icon">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-center w-100">No hay documentos disponibles.</p>
+    {% endif %}
+</div>
+
+<!-- 🎨 Estilos Personalizados -->
+<style>
+    /* 🔹 Estilos generales */
+    body {
+        background-color: #e0f7fa;
+        font-family: Arial, sans-serif;
+    }
+
+    /* 🔹 Encabezado */
+    .header {
+        background-color: #013220;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .header-logo {
+        width: 170px;
+        height: auto;
+    }
+
+    .titulo-marca-agua {
+        color: white;
+        font-size: 40px;
+        font-weight: bold;
+        text-transform: uppercase;
+        text-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+    }
+
+    /* 🔹 Tarjetas de Documentos */
+    .document-card {
+        border: 3px solid #00796b;
+        border-radius: 10px;
+        transition: box-shadow 0.3s ease-in-out;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        padding: 15px;
+    }
+
+    .document-card:hover {
+        box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .document-title {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    /* 🔹 Muestra todas las líneas de investigación con sus respectivos iconos */
+    .research-lines {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 5px;
+    }
+
+    /* 🔹 Iconos de líneas de investigación */
+    .research-lines i {
+        font-size: 18px;
+        color: #00796b;
+        cursor: pointer;
+        transition: transform 0.2s ease-in-out;
+    }
+
+    /* Efecto al pasar el mouse */
+    .research-lines i:hover {
+        transform: scale(1.2);
+    }
+
+    /* Botón de eliminación */
+    .delete-icon {
+        background: none;
+        border: none;
+        color: #d32f2f;
+        font-size: 20px;
+        cursor: pointer;
+        position: absolute;
+        right: 15px;
+        bottom: 15px;
+        z-index: 20;
+    }
+
+    .delete-icon:hover {
+        color: #b71c1c;
+    }
+</style>
+
+{% endblock %}
