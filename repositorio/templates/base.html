@@ -1,34 +1,322 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Repositorio Digital</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #e0f7fa;
+      padding-bottom: 70px; /* espacio para la barra inferior */
+    }
 
-{% block content %}
-  <h1>Trabajos de Grado</h1>
-  <table>
-    <thead>
-      <tr>
-        <th>Título</th>
-        <th>Nombre</th>
-        <th>Apellido</th>
-        <th>Resumen</th>
-        <th>Archivo</th>
-        <th>Fecha de Publicación</th>
-        <th>Palabras Clave</th>
-        <th>Tutor</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for trabajo in trabajos %}
-      <tr>
-        <td>{{ trabajo.titulo }}</td>
-        <td>{{ trabajo.nombre }}</td>
-        <td>{{ trabajo.apellido }}</td>
-        <td>{{ trabajo.resumen|truncatechars:100 }}</td>
-        <td><a href="{{ trabajo.archivo.url }}">Descargar</a></td>
-        <td>{{ trabajo.fecha_publicacion }}</td>
-        <td>{{ trabajo.palabras_clave }}</td>
-        <td>{{ trabajo.tutor }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-{% endblock %}
+    /* 🔹 Barra inferior */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: #013220;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 70px;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+      z-index: 100;
+    }
 
+    .bottom-bar a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 15px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #fff;
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      background-color: #004d40;
+      transition: transform 0.2s, background-color 0.2s;
+    }
+
+    .bottom-bar a:hover {
+      background-color: #00332b;
+      transform: scale(1.05);
+    }
+
+    .bottom-bar a i {
+      margin-right: 8px;
+    }
+    .search-form {
+      display: flex;
+      align-items: center;
+      margin-right: auto; /* Empuja los enlaces a la derecha */
+      margin-left: 15px;
+    }
+    
+    .search-input {
+      padding: 8px 10px;
+      border: none;
+      border-radius: 8px 0 0 8px;
+      outline: none;
+      font-size: 16px;
+    }
+
+    .search-form button {
+      padding: 8px 12px;
+      border: none;
+      background-color: #004d40;
+      color: white;
+      font-size: 16px;
+      border-radius: 0 8px 8px 0;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .search-form button:hover {
+      background-color: #00332b;
+    }
+
+    /* 🔹 Contenido principal */
+    #content {
+      padding: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 🔹 Contenido dinámico -->
+  <div id="content">
+    {% block content %}{% endblock %}
+  </div>
+   
+    <div class="bottom-bar" style="display: flex; justify-content: space-between; align-items: center; padding: 5px 10px; flex-wrap: wrap;">
+
+      <!-- Contenedor de búsqueda -->
+      <div class="search-container" style="position: relative; display: flex; align-items: center; gap: 5px;">
+        <input type="text" id="searchInput" class="search-input" placeholder="Buscar..." autocomplete="off" />
+        <button onclick="realizarBusqueda()" type="button"><i class="fas fa-search"></i></button>
+        
+        <!-- Resultados en tiempo real -->
+        <div id="searchResults" style="
+          position: absolute;
+          bottom: 100%;
+          left: 0;
+          background-color: white;
+          width: 300px;
+          max-height: 300px;
+          overflow-y: auto;
+          border: 1px solid #ccc;
+          z-index: 1000;
+          display: none;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        "></div>
+      </div>
+      
+      <!-- Enlaces principales -->
+      <div class="nav-links" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <a href="javascript:history.back()" style="display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 8px; background-color: #004d40; transition: transform 0.2s, background-color 0.2s;">
+          <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Volver
+        </a>  
+        <a href="javascript:void(0);" onclick="toggleFiltros()"><i class="fas fa-filter"></i> Filtros</a>
+        <a href="{% url 'principal' %}"><i class="fas fa-home"></i> Página Principal</a>
+        
+        {% if user.is_authenticated %}
+          <a href="{% url 'documento_crear' %}"><i class="fas fa-upload"></i> Cargar Documento</a>
+        {% endif %}
+    
+        {% if user.is_authenticated %}
+          {% if user.is_staff %}
+            <a href="{% url 'admin:index' %}"><i class="fas fa-cogs"></i> Admin</a>
+          {% endif %}
+          <form action="{% url 'logout' %}" method="post" style="display:inline;">
+              {% csrf_token %}
+              <button type="submit" style="background:none; border:none; color:white; cursor:pointer; font-size: 18px;">
+                <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+              </button>
+            </form>
+        {% else %}
+          <a href="{% url 'login' %}"><i class="fas fa-user"></i> Iniciar sesión</a>
+        {% endif %}
+      </div>
+    
+    </div>
+    
+    <!-- 🔹 Panel flotante de filtros -->
+    <div id="filtroPanel" style="
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: white;
+      border: 2px solid #004d40;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 101;
+      display: none;
+    ">
+      <form id="filtroForm" method="get" action="/resultados/">
+          <div style="margin-bottom: 10px;">
+            <input
+              type="text"
+              name="q"
+              placeholder="Buscar por título, autor, etc."
+              value="{{ request.GET.q|default_if_none:'' }}"
+              style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 5px;"
+            />
+          </div>
+        
+          <div style="margin-bottom: 10px;">
+            <label for="categoria">Categoría:</label><br>
+            <select name="categoria" id="categoria" style="width: 100%; padding: 5px;">
+              <option value="">Todas</option>
+              <option value="electronica" {% if request.GET.categoria == "electronica" %}selected{% endif %}>Electrónica</option>
+              <option value="diseno" {% if request.GET.categoria == "diseno" %}selected{% endif %}>Diseño Tecnológico</option>
+              <option value="tecnologia" {% if request.GET.categoria == "tecnologia" %}selected{% endif %}>Tecnología</option>
+            </select>
+          </div>
+        
+          <div style="margin-bottom: 10px;">
+            <label for="linea">Línea de investigación:</label><br>
+            <select name="linea" id="linea" style="width: 100%; padding: 5px;">
+              <option value="">Todas</option>
+              {% for linea in lineas %}
+                <option value="{{ linea }}" {% if request.GET.linea == linea %}selected{% endif %}>{{ linea }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          
+          <div style="margin-bottom: 10px;">
+              <label for="año">Año de publicación:</label><br>
+              <select name="año">
+                  <option value="">Todos</option>
+                  {% for año in años %}
+                    <option value="{{ año }}" {% if año|stringformat:"s" == año_filtro %}selected{% endif %}>
+                      {{ año }}
+                    </option>
+                  {% endfor %}
+                </select>
+            </div>
+        
+          <button type="submit" style="padding: 6px 15px; background-color: #004d40; color: white; border: none; border-radius: 5px;">Aplicar</button>
+        </form>
+    </div>
+    <script>
+      const searchInput = document.getElementById('searchInput');
+      const searchResults = document.getElementById('searchResults');
+    
+      searchInput.addEventListener('input', function () {
+        const query = searchInput.value.trim();
+        if (query.length === 0) {
+          searchResults.innerHTML = '';
+          searchResults.style.display = 'none';
+          return;
+        }
+    
+        fetch(`/busqueda-ajax/?q=${encodeURIComponent(query)}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.resultados.length === 0) {
+              searchResults.innerHTML = '<div style="padding: 10px;">No se encontraron resultados.</div>';
+            } else {
+              searchResults.innerHTML = data.resultados.map(doc => `
+              <div class="document-card">
+                <div class="document-title">${doc.titulo}</div>
+                <a class="document-link" href="/documento/detalle/${doc.id}/">Ver detalles</a>
+              </div>
+            `).join('');
+            }
+            searchResults.style.display = 'block';
+          })
+          .catch(error => {
+            console.error('Error en la búsqueda:', error);
+          });
+      });
+    
+      document.addEventListener('click', function (e) {
+        if (!e.target.closest('.search-container')) {
+          searchResults.style.display = 'none';
+        }
+      });
+    
+      function realizarBusqueda() {
+        const query = searchInput.value.trim();
+        if (query) {
+          window.location.href = `/resultados/?q=${encodeURIComponent(query)}`;
+        }
+      }
+    </script>
+    <script>
+      function toggleFiltros() {
+        const panel = document.getElementById('filtroPanel');
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+      }
+    </script>
+    <script>
+        const lineasInvestigacion = {
+          electronica: [
+            "Análisis Técnica", "EduTech", "Experiencias ETIAE/MTIAE",
+            "Productos – Prototipos – Tecnológicos", "Sistemas de Control", "Tecnologías Digitales"
+          ],
+          diseno: [
+            "Análisis Técnica", "Diseño de Prototipos", "Educación en y con tecnología",
+            "Experiencias ETIAE/MTIAE", "Herramientas Digitales", "Monografías", "Propuesta Disciplinar"
+          ],
+          tecnologia: [
+            "Análisis Técnica", "Diseño de Prototipos", "Educación en y con tecnología",
+            "Experiencias ETIAE/MTIAE", "Herramientas Digitales", "Monografías", "Propuesta Disciplinar"
+          ]
+        };
+        
+        // Recuperar valores previos del filtro
+        const categoriaSeleccionada = "{{ request.GET.categoria|default:'' }}";
+        const lineaSeleccionada = "{{ request.GET.linea|default:'' }}";
+        
+        const selectCategoria = document.getElementById('categoria');
+        const selectLinea = document.getElementById('linea');
+        
+        function actualizarLineas() {
+          const categoria = selectCategoria.value;
+          const lineas = lineasInvestigacion[categoria] || [];
+        
+          selectLinea.innerHTML = '<option value="">Todas</option>';
+          lineas.forEach(linea => {
+            const option = document.createElement('option');
+            option.value = linea;
+            option.text = linea;
+        
+            if (linea === lineaSeleccionada) {
+              option.selected = true;
+            }
+        
+            selectLinea.appendChild(option);
+          });
+        }
+        
+        selectCategoria.addEventListener('change', actualizarLineas);
+        
+        // Inicializar al cargar la página si hay una categoría seleccionada
+        selectCategoria.value = categoriaSeleccionada || "electronica";
+        actualizarLineas();
+        </script>
+        <script>
+          function toggleMenu() {
+            const menu = document.getElementById("user-menu");
+            menu.style.display = menu.style.display === "none" ? "block" : "none";
+          }
+        
+          // Ocultar menú si haces clic fuera
+          document.addEventListener("click", function(event) {
+            const menu = document.getElementById("user-menu");
+            const icon = event.target.closest("i.fa-user");
+            if (!icon && menu) {
+              menu.style.display = "none";
+            }
+          });
+        </script>
+</body>
+</html>

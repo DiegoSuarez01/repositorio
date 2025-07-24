@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>¿Estás seguro de que deseas eliminar el documento "{{ object.titulo }}"?</h2>
+  <form method="POST">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Eliminar</button>
+    <a href="{% url 'lista_documentos' %}" class="btn btn-secondary">Cancelar</a>
+  </form>
+{% endblock %}
