@@ -60,11 +60,11 @@
                 </fieldset>
 
                 <!-- 🔹 Botón de Carga -->
-                <div class="text-center mt-4">
-                    <button type="submit" class="btn btn-primary btn-lg px-5 py-3 rounded-4 shadow fw-bold">
-                        🚀 Subir Documento
-                    </button>
-                </div>
+                <form method="POST" enctype="multipart/form-data">
+                  {% csrf_token %}
+                  {{ form.as_p }}
+                  <button type="submit">Subir</button>
+                </form>
 
             </form>
         </div>
