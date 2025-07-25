@@ -29,20 +29,7 @@ def login_view(request):
         form = AuthenticationForm()
     return render(request, 'login.html', {'form': form})
 
-LINEAS_INVESTIGACION = {
-    "electronica": [
-        "Análisis Técnica", "EduTech", "Experiencias ETIAE/MTIAE",
-        "Productos – Prototipos – Tecnológicos", "Sistemas de Control", "Tecnologías Digitales"
-    ],
-    "diseno": [
-        "Análisis Técnica", "Diseño de Prototipos", "Educación en y con tecnología",
-        "Experiencias ETIAE/MTIAE", "Herramientas Digitales", "Monografías", "Propuesta Disciplinar"
-    ],
-    "tecnologia": [
-        "Análisis Técnica", "Diseño de Prototipos", "Educación en y con tecnología",
-        "Experiencias ETIAE/MTIAE", "Herramientas Digitales", "Monografías", "Propuesta Disciplinar"
-    ]
-}
+
 import unicodedata
 
 def normalizar(texto):
@@ -162,8 +149,28 @@ def resultados_busqueda_view(request):
         'años': años,  # <- Esta lista sí se va a mostrar al cargar la página
     })
 
+LINEAS_INVESTIGACION = {
+    "electronica": [
+        "Análisis Técnica", "EduTech", "Experiencias ETIAE/MTIAE",
+        "Productos – Prototipos – Tecnológicos", "Sistemas de Control", "Tecnologías Digitales"
+    ],
+    "diseno": [
+        "Análisis Técnica", "Diseño de Prototipos", "Educación en y con tecnología",
+        "Experiencias ETIAE/MTIAE", "Herramientas Digitales", "Monografías", "Propuesta Disciplinar"
+    ],
+    "tecnologia": [
+        "Análisis Técnica", "Diseño de Prototipos", "Educación en y con tecnología",
+        "Experiencias ETIAE/MTIAE", "Herramientas Digitales", "Monografías", "Propuesta Disciplinar"
+    ]
+}
+def asegurar_lineas_investigacion():
+    from .models import LineaInvestigacion
+    for categoria, nombres in LINEAS_INVESTIGACION.items():
+        for nombre in nombres:
+            LineaInvestigacion.objects.get_or_create(nombre=nombre)
 
 class DocumentoUpdateView(UpdateView):
+    asegurar_lineas_investigacion()
     model = Documento
     form_class = DocumentoForm
     template_name = 'documento_editar.html'
@@ -200,6 +207,7 @@ class DocumentoEliminarView(DeleteView):
 
 
 class DocumentoCreateView(CreateView):
+    asegurar_lineas_investigacion()
     login_url = 'login'
     model = Documento
     form_class = DocumentoForm

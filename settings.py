@@ -1,5 +1,10 @@
+
 import os  # AsegÃºrate de importar esto
 from pathlib import Path
+
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -12,12 +17,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-*w86)9o7e()t7da#h!=a%+=lq^-g6ku6zqj+&3g)ci%(n3za&@'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS =  [
-    'repositoriodte.onrender.com',  # ← tu dominio en Render
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    'repositoriodte.onrender.com',  # tu dominio de Render
 ]
-
 
 # Application definition
 
@@ -31,8 +37,18 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'crispy_forms',  # Agregar esta linea
     'crispy_bootstrap4',
-    'repositorio'                                          
+    'repositorio', 
+    'cloudinary',
+    'cloudinary_storage',                                    
 ]
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': 'dacj8yaea',
+    'API_KEY': '912348664722477',
+    'API_SECRET': 'Kf_f5lBlZoLvu6aZBqGN3tPWFH8'
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -113,7 +129,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = '/static/'
-
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
