@@ -36,7 +36,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'crispy_forms',  # Agregar esta linea
     'crispy_bootstrap4',
-    'repositorio'      
+    'repositorio', 
     'cloudinary',
     'cloudinary_storage',                                    
 ]
