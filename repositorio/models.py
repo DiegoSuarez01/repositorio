@@ -40,6 +40,7 @@ class Documento(models.Model):
     fuentes = models.TextField(blank=True, null=True)
     enlace = models.URLField(blank=True, null=True)   
     archivo = models.FileField(upload_to='documentos/', max_length=255, blank=True, null=True)
+    enlace_archivo = models.URLField("Enlace al PDF (Cloudinary)", blank=True, null=True)
     año = models.CharField(max_length=4, blank=True, null=True)
     categoria = models.CharField(max_length=50, choices=CATEGORIAS, default='electronica')
 
