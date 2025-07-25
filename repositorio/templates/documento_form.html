@@ -17,7 +17,7 @@
                     <div class="archivo-upload">
                 
                         <!-- ✅ Input real oculto con name e id -->
-                        <input type="file" name="archivo" id="archivo" class="d-none" accept=".pdf" onchange="mostrarNombreArchivo(this)" required>
+                        <input type="url" name="enlace_archivo" placeholder="https://res.cloudinary.com/..." class="form-control">
                 
                         <!-- ✅ Botón estilizado que abre el input oculto -->
                         <button type="button" class="btn btn-outline-success w-100 py-3 rounded-4 fw-bold shadow-sm" onclick="document.getElementById('archivo').click()">

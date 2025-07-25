@@ -205,7 +205,8 @@ class DocumentoEliminarView(DeleteView):
         documento = self.get_object()
         return reverse_lazy(f"lic_{documento.categoria.lower()}") if documento.categoria else reverse_lazy('principal')
 
-
+import requests
+import tempfile
 class DocumentoCreateView(CreateView):
     login_url = 'login'
     model = Documento
@@ -242,22 +243,30 @@ class DocumentoCreateView(CreateView):
 
     def form_valid(self, form):
         documento = form.save(commit=False)
+        archivo_pdf = None  # ruta local temporal
     
         if documento.archivo:
-            
+            # 🗂️ Archivo local subido desde el formulario
+            archivo_pdf = documento.archivo.path
+    
+        elif documento.enlace_archivo:
+            # 🌐 Enlace al PDF (por ejemplo, de Cloudinary)
             try:
-                archivo_pdf = documento.archivo.path
+                response = requests.get(documento.enlace_archivo)
+                response.raise_for_status()
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp:
+                    temp.write(response.content)
+                    archivo_pdf = temp.name
             except Exception as e:
-                print("Error accediendo al path del archivo:", e)
-                raise e  # para que lo veas en consola
+                print("❌ Error descargando el archivo desde el enlace:", e)
+                return self.form_invalid(form)
+        
+        if archivo_pdf:
             texto, num_paginas, ruta_pdf = extraer_texto(archivo_pdf)
-            info_extraida = procesar_documento(archivo_pdf)
-            if info_extraida is None:
-                info_extraida = {}
+            info_extraida = procesar_documento(archivo_pdf) or {}
     
             info_general = info_extraida.get("Información General", {})
-            año = detectar_año(texto)
-            documento.año = año
+            documento.año = detectar_año(texto)
             documento.titulo = info_general.get("TÍTULO", "No disponible")
             documento.autor = info_general.get("AUTOR(ES)", "No disponible")
             documento.director = info_general.get("DIRECTOR", "No registrado")
@@ -270,19 +279,12 @@ class DocumentoCreateView(CreateView):
             documento.conclusiones = info_extraida.get("Conclusiones", "No disponible")
     
             fuentes = info_extraida.get("Fuentes", "No disponible")
-            if isinstance(fuentes, list):
-                documento.fuentes = "\n".join(fuentes)
-            else:
-                documento.fuentes = fuentes
+            documento.fuentes = "\n".join(fuentes) if isinstance(fuentes, list) else fuentes
     
-        # 👇 Aquí procesamos las líneas de investigación seleccionadas manualmente
-        lineas_ids = self.request.POST.getlist("lineas_investigacion")
-        
-    
+        # 👇 Guardar categoría y líneas de investigación
         documento.categoria = form.cleaned_data['categoria']
         documento.save()
-
-        documento.lineas_investigacion.set(lineas_ids)
+        documento.lineas_investigacion.set(self.request.POST.getlist("lineas_investigacion"))
     
         return redirect(self.get_success_url())
     
