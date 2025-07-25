@@ -207,7 +207,6 @@ class DocumentoEliminarView(DeleteView):
 
 
 class DocumentoCreateView(CreateView):
-    asegurar_lineas_investigacion()
     login_url = 'login'
     model = Documento
     form_class = DocumentoForm
@@ -224,6 +223,7 @@ class DocumentoCreateView(CreateView):
         return reverse_lazy('principal')
     
     def get_context_data(self, **kwargs):
+        asegurar_lineas_investigacion()
         context = super().get_context_data(**kwargs)
         
         # Generar lista con id y nombre para cada línea
@@ -245,7 +245,11 @@ class DocumentoCreateView(CreateView):
     
         if documento.archivo:
             
-            archivo_pdf = documento.archivo.path
+            try:
+                archivo_pdf = documento.archivo.path
+            except Exception as e:
+                print("Error accediendo al path del archivo:", e)
+                raise e  # para que lo veas en consola
             texto, num_paginas, ruta_pdf = extraer_texto(archivo_pdf)
             info_extraida = procesar_documento(archivo_pdf)
             if info_extraida is None:
