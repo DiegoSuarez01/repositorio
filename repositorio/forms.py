@@ -48,13 +48,16 @@ class DocumentoForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
+        # Hacer todos los campos opcionales excepto archivo
         for field in self.fields:
-            if field != 'archivo':  # Solo el archivo es obligatorio
+            if field != 'archivo':
                 self.fields[field].required = False
+    
+        # Filtrar las líneas de investigación según la categoría
         categoria_inicial = self.data.get('categoria') or self.initial.get('categoria')
         if categoria_inicial in LINEAS_INVESTIGACION:
-            opciones = [(linea, linea) for linea in LINEAS_INVESTIGACION[categoria_inicial]]
-            self.fields['lineas_investigacion'].choices = opciones
+            lineas = LineaInvestigacion.objects.filter(nombre__in=LINEAS_INVESTIGACION[categoria_inicial])
+            self.fields['lineas_investigacion'].queryset = lineas
         else:
-            self.fields['lineas_investigacion'].choices = []
-
+            self.fields['lineas_investigacion'].queryset = LineaInvestigacion.objects.none()
