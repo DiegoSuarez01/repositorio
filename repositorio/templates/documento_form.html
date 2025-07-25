@@ -25,10 +25,14 @@
                         </button>            
                         <!-- ✅ Nombre del archivo -->
                         <div id="archivo-nombre" class="mt-2 text-secondary fst-italic">Ningún archivo seleccionado</div>
+                        <div class="col-md-12 form-floating mb-3">
+                            {{ form.titulo }}
+                            <label for="{{ form.titulo.id_for_label }}">📘 Título</label>
+                        </div>
                     </div>
                 </fieldset>
                 
-
+                
                 <!-- 🔹 Sección de Enlace -->
                 <fieldset class="mb-4">
                     <legend class="fw-bold text-primary">🔗 Enlace</legend>
@@ -177,5 +181,29 @@
 
     categoriaSelect.addEventListener("change", actualizarLineas);
     document.addEventListener("DOMContentLoaded", actualizarLineas);
+</script>
+<script>
+    // Detectar cuando escribes un enlace en el campo
+    document.addEventListener("DOMContentLoaded", function () {
+        const inputEnlace = document.querySelector('input[name="enlace_archivo"]');
+        const inputTitulo = document.querySelector('input[name="titulo"]');
+
+        if (inputEnlace && inputTitulo) {
+            inputEnlace.addEventListener("input", function () {
+                const url = inputEnlace.value;
+                try {
+                    const nombreArchivo = decodeURIComponent(url.split("/").pop().split("?")[0]);
+                    const sinExtension = nombreArchivo.replace(/\.pdf$/i, "").replace(/[_\-]/g, " ");
+                    const tituloLimpio = sinExtension.trim();
+
+                    if (tituloLimpio.length > 0) {
+                        inputTitulo.value = tituloLimpio;
+                    }
+                } catch (e) {
+                    console.log("❌ No se pudo extraer el nombre del archivo.");
+                }
+            });
+        }
+    });
 </script>
 {% endblock %}
