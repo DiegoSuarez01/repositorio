@@ -22,8 +22,7 @@
                         <!-- ✅ Botón estilizado que abre el input oculto -->
                         <button type="button" class="btn btn-outline-success w-100 py-3 rounded-4 fw-bold shadow-sm" onclick="document.getElementById('archivo').click()">
                             📤 Seleccionar archivo PDF
-                        </button>
-                
+                        </button>            
                         <!-- ✅ Nombre del archivo -->
                         <div id="archivo-nombre" class="mt-2 text-secondary fst-italic">Ningún archivo seleccionado</div>
                     </div>
@@ -60,11 +59,11 @@
                 </fieldset>
 
                 <!-- 🔹 Botón de Carga -->
-                <form method="POST" enctype="multipart/form-data">
-                  {% csrf_token %}
-                  {{ form.as_p }}
-                  <button type="submit">Subir</button>
-                </form>
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg px-5 py-3 rounded-4 shadow fw-bold">
+                        🚀 Subir Documento
+                    </button>
+                </div>
 
             </form>
         </div>
