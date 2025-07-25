@@ -52,6 +52,7 @@
                             <label class="fw-bold text-success">🧭 Líneas de Investigación</label>
                             <div id="lineas-container" class="form-check">
                                 {{ form.lineas_investigacion }}
+                                {{ linea_data|default:"NO DATA" }}
                             </div>
                         </div>
                         
@@ -149,10 +150,11 @@
 </script>
 <script>
     const lineasPorCategoria = {
-        electronica: {{ linea_data.electronica|safe }},
-        diseno: {{ linea_data.diseno|safe }},
-        tecnologia: {{ linea_data.tecnologia|safe }}
+        "electronica": {{ linea_data.electronica|safe }},
+        "diseno": {{ linea_data.diseno|safe }},
+        "tecnologia": {{ linea_data.tecnologia|safe }}
     };
+
 
     const categoriaSelect = document.getElementById("id_categoria");
     const container = document.getElementById("lineas-container");
