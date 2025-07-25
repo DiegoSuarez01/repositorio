@@ -3,3 +3,5 @@ gunicorn
 PyMuPDF
 django-crispy-forms
 crispy-bootstrap4
+cloudinary
+django-cloudinary-storage
