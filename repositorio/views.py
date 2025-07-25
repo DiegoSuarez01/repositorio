@@ -243,27 +243,32 @@ class DocumentoCreateView(CreateView):
 
     def form_valid(self, form):
         documento = form.save(commit=False)
-        archivo_pdf = None  # ruta local temporal
     
+        archivo_pdf = None  # Ruta del PDF final (local o descargado)
+    
+        # 🧩 Si hay archivo subido localmente
         if documento.archivo:
-            # 🗂️ Archivo local subido desde el formulario
             archivo_pdf = documento.archivo.path
     
-        elif documento.enlace_archivo:
-            # 🌐 Enlace al PDF (por ejemplo, de Cloudinary)
+        # 🌐 Si no hay archivo subido pero sí hay enlace
+        elif documento.enlace:
             try:
-                response = requests.get(documento.enlace_archivo)
-                response.raise_for_status()
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp:
-                    temp.write(response.content)
-                    archivo_pdf = temp.name
+                response = requests.get(documento.enlace)
+                if response.status_code == 200:
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+                        tmp_file.write(response.content)
+                        archivo_pdf = tmp_file.name
+                else:
+                    print("❌ Error descargando el PDF desde el enlace.")
             except Exception as e:
-                print("❌ Error descargando el archivo desde el enlace:", e)
-                return self.form_invalid(form)
-        
+                print("❌ Error en la descarga:", e)
+    
+        # 🔍 Si se obtuvo un archivo PDF de alguna forma
         if archivo_pdf:
             texto, num_paginas, ruta_pdf = extraer_texto(archivo_pdf)
-            info_extraida = procesar_documento(archivo_pdf) or {}
+            info_extraida = procesar_documento(archivo_pdf)
+            if info_extraida is None:
+                info_extraida = {}
     
             info_general = info_extraida.get("Información General", {})
             documento.año = detectar_año(texto)
@@ -281,10 +286,11 @@ class DocumentoCreateView(CreateView):
             fuentes = info_extraida.get("Fuentes", "No disponible")
             documento.fuentes = "\n".join(fuentes) if isinstance(fuentes, list) else fuentes
     
-        # 👇 Guardar categoría y líneas de investigación
+        # 🎯 Guardar categoría y líneas
+        lineas_ids = self.request.POST.getlist("lineas_investigacion")
         documento.categoria = form.cleaned_data['categoria']
         documento.save()
-        documento.lineas_investigacion.set(self.request.POST.getlist("lineas_investigacion"))
+        documento.lineas_investigacion.set(lineas_ids)
     
         return redirect(self.get_success_url())
     
