@@ -1,5 +1,18 @@
 from django.db import models
-
+LINEAS_INVESTIGACION = {
+    "electronica": [
+        "Análisis Técnica", "EduTech", "Experiencias ETIAE/MTIAE",
+        "Productos – Prototipos – Tecnológicos", "Sistemas de Control", "Tecnologías Digitales"
+    ],
+    "diseno": [
+        "Análisis Técnica", "Diseño de Prototipos", "Educación en y con tecnología",
+        "Experiencias ETIAE/MTIAE", "Herramientas Digitales", "Monografías", "Propuesta Disciplinar"
+    ],
+    "tecnologia": [
+        "Análisis Técnica", "Diseño de Prototipos", "Educación en y con tecnología",
+        "Experiencias ETIAE/MTIAE", "Herramientas Digitales", "Monografías", "Propuesta Disciplinar"
+    ]
+}
 class LineaInvestigacion(models.Model):
     nombre = models.CharField(max_length=100)
 
