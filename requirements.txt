@@ -3,3 +3,5 @@ gunicorn
 PyMuPDF
 django-crispy-forms
 crispy-bootstrap4
+requests
+tempfile
