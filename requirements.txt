@@ -1,7 +1,0 @@
-Django>=4.2
-gunicorn
-PyMuPDF
-django-crispy-forms
-crispy-bootstrap4
-cloudinary
-django-cloudinary-storage
