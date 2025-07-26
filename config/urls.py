@@ -5,7 +5,7 @@ from django.conf.urls.static import static
 from django.views.generic import TemplateView
 from repositorio.views import (
     DocumentoCreateView, DocumentoEView, DocumentoDView, DocumentoTView,
-    DocumentoDetailView, DocumentoEliminarView, login_view,
+    DocumentoDetailView, DocumentoEliminarView, login_view, extraer_titulo_ajax,
     busqueda_ajax, principal, DocumentoUpdateView, resultados_busqueda_view
 )
 from repositorio import views
@@ -30,6 +30,8 @@ urlpatterns = [
     path('busqueda-ajax/', views.busqueda_ajax, name='busqueda_ajax'),
     path('resultados/', resultados_busqueda_view, name='resultados_busqueda'),
     path('documento/<int:pk>/editar/', DocumentoUpdateView.as_view(), name='documento_editar'),
+    
+    path('ajax/extraer-titulo/', extraer_titulo_ajax, name='ajax_extraer_titulo'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 """
 urlpatterns = [
