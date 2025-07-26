@@ -2,9 +2,6 @@
 import os  # AsegÃºrate de importar esto
 from pathlib import Path
 
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -37,18 +34,10 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'crispy_forms',  # Agregar esta linea
     'crispy_bootstrap4',
-    'repositorio', 
-    'cloudinary',
-    'cloudinary_storage',                                    
+    'repositorio',                                    
 ]
 
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': 'dacj8yaea',
-    'API_KEY': '912348664722477',
-    'API_SECRET': 'Kf_f5lBlZoLvu6aZBqGN3tPWFH8',
-}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
