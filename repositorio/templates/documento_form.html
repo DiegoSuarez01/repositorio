@@ -17,7 +17,7 @@
                     <div class="archivo-upload">
                 
                         <!-- ✅ Input real oculto con name e id -->
-                        <input type="url" name="enlace_archivo" placeholder="https://res.cloudinary.com/..." class="form-control">
+                        <input type="url" id="input-enlace" name="enlace_archivo" placeholder="https://..." class="form-control">
                 
                         <!-- ✅ Botón estilizado que abre el input oculto -->
                         <button type="button" class="btn btn-outline-success w-100 py-3 rounded-4 fw-bold shadow-sm" onclick="document.getElementById('archivo').click()">
@@ -183,23 +183,26 @@
     document.addEventListener("DOMContentLoaded", actualizarLineas);
 </script>
 <script>
-    document.getElementById("btn-extraer").addEventListener("click", function () {
-        const enlace = document.querySelector('input[name="enlace_archivo"]').value;
+    document.getElementById("btn-extraer").addEventListener("click", function() {
+        const enlace = document.getElementById("input-enlace").value;
         if (!enlace) {
-            alert("Pega primero el enlace del PDF.");
+            alert("⚠️ Por favor ingresa un enlace de Google Drive u otro PDF público.");
             return;
         }
-
-        fetch(`/ajax/extraer-titulo/?url=${encodeURIComponent(enlace)}`)
-            .then(res => res.json())
+    
+        fetch(`/extraer-titulo/?url=${encodeURIComponent(enlace)}`)
+            .then(response => response.json())
             .then(data => {
                 if (data.titulo) {
                     document.getElementById("campo-titulo").value = data.titulo;
                 } else {
-                    alert(data.error || "No se pudo extraer el título.");
+                    alert("❌ No se pudo extraer el título.");
                 }
             })
-            .catch(err => alert("Error al extraer el título."));
+            .catch(error => {
+                console.error("Error al extraer título:", error);
+                alert("❌ Ocurrió un error al intentar extraer el título.");
+            });
     });
 </script>
 {% endblock %}
