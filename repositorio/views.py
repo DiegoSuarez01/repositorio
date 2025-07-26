@@ -207,6 +207,33 @@ class DocumentoEliminarView(DeleteView):
 
 import requests
 import tempfile
+def extraer_titulo_ajax(request):
+    enlace = request.GET.get("url", "")
+    if not enlace:
+        return JsonResponse({"error": "No se proporcionó el enlace"}, status=400)
+
+    try:
+        response = requests.get(enlace)
+        if response.status_code != 200:
+            return JsonResponse({"error": "No se pudo descargar el PDF"})
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+            tmp_file.write(response.content)
+            tmp_file.flush()
+
+            doc = fitz.open(tmp_file.name)
+            texto = ""
+            for pagina in doc.pages(0, min(3, len(doc))):
+                texto += pagina.get_text()
+            doc.close()
+
+        lineas = [line.strip() for line in texto.splitlines() if line.strip()]
+        titulo = lineas[0] if lineas else "No disponible"
+        return JsonResponse({"titulo": titulo})
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+    
 class DocumentoCreateView(CreateView):
     login_url = 'login'
     model = Documento
