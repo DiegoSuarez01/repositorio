@@ -207,15 +207,22 @@ class DocumentoEliminarView(DeleteView):
 
 import requests
 import tempfile
+
 def extraer_titulo_ajax(request):
     enlace = request.GET.get("url", "")
     if not enlace:
         return JsonResponse({"error": "No se proporcionó el enlace"}, status=400)
 
+    # 🔧 Si el enlace es de Google Drive, conviértelo en un enlace de descarga
+    match = re.search(r'drive.google.com\/file\/d\/([^/]+)', enlace)
+    if match:
+        file_id = match.group(1)
+        enlace = f"https://drive.google.com/uc?export=download&id={file_id}"
+
     try:
         response = requests.get(enlace)
         if response.status_code != 200:
-            return JsonResponse({"error": "No se pudo descargar el PDF"})
+            return JsonResponse({"error": f"No se pudo descargar el PDF (código {response.status_code})"})
 
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
             tmp_file.write(response.content)
