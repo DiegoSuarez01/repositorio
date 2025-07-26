@@ -203,3 +203,8 @@
     });
 </script>
 {% endblock %}
+
+import requests
+url = "https://res.cloudinary.com/dacj8yaea/raw/upload/v1753476562/rm5xphlouwofb7ofn2u9.pdf"
+r = requests.get(url)
+print(r.status_code)

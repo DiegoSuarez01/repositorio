@@ -29,13 +29,19 @@ def comprimir_pdf(ruta_original, ruta_comprimida):
     except Exception as e:
         print(f"❌ Error al comprimir {ruta_original}: {e}")
 
-def subir_pdf(ruta_pdf):
+def subir_pdf(ruta_pdf, nombre_archivo):
     try:
-        res = cloudinary.uploader.upload(ruta_pdf, resource_type="raw")
-        print(f"✅ Subido correctamente: {os.path.basename(ruta_pdf)}")
+        res = cloudinary.uploader.upload(
+            ruta_pdf,
+            resource_type="raw",
+            public_id=f"repositorio/{nombre_archivo}",  # Subcarpeta + nombre original
+            unique_filename=False,
+            overwrite=True
+        )
+        print(f"✅ Subido correctamente: {nombre_archivo}")
         print(f"🌐 URL: {res['secure_url']}")
     except Exception as e:
-        print(f"❌ Error al subir {ruta_pdf}: {e}")
+        print(f"❌ Error al subir {nombre_archivo}: {e}")
 
 # 🔄 Subir todos los PDF
 for archivo in os.listdir(carpeta_pdfs):
@@ -43,17 +49,19 @@ for archivo in os.listdir(carpeta_pdfs):
         ruta = os.path.join(carpeta_pdfs, archivo)
         tamano = os.path.getsize(ruta)
 
-        print(f"📄 Procesando: {archivo} ({round(tamano / (1024 * 1024), 2)} MB)")
+        print(f"\n📄 Procesando: {archivo} ({round(tamano / (1024 * 1024), 2)} MB)")
+
+        nombre_archivo = os.path.splitext(archivo)[0]  # Sin extensión
 
         if tamano > MAX_TAMANO:
             ruta_comprimida = ruta.replace('.pdf', '_comprimido.pdf')
             comprimir_pdf(ruta, ruta_comprimida)
 
             if os.path.exists(ruta_comprimida):
-                subir_pdf(ruta_comprimida)
+                subir_pdf(ruta_comprimida, nombre_archivo)
             else:
                 print(f"⚠️ No se generó el archivo comprimido para: {archivo}")
         else:
-            subir_pdf(ruta)
+            subir_pdf(ruta, nombre_archivo)
 
-        print("-" * 50)
+        print("-" * 60)
