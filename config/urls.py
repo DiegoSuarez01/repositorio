@@ -31,7 +31,7 @@ urlpatterns = [
     path('resultados/', resultados_busqueda_view, name='resultados_busqueda'),
     path('documento/<int:pk>/editar/', DocumentoUpdateView.as_view(), name='documento_editar'),
     
-    path('ajax/extraer-titulo/', extraer_titulo_ajax, name='ajax_extraer_titulo'),
+    path('extraer-titulo/', extraer_titulo_ajax, name='extraer_titulo_ajax'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 """
 urlpatterns = [

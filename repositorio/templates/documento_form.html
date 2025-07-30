@@ -17,7 +17,9 @@
                     <div class="archivo-upload">
                 
                         <!-- ✅ Input real oculto con name e id -->
-                        <input type="url" id="input-enlace" name="enlace_archivo" placeholder="https://..." class="form-control">
+                        <input type="file" id="archivo" name="archivo" accept="application/pdf" onchange="subirArchivo(event)">
+                        <div id="archivo-nombre" class="mt-2 text-secondary fst-italic">Ningún archivo seleccionado</div>
+                        <input type="hidden" name="enlace_archivo" id="enlace_archivo">
                 
                         <!-- ✅ Botón estilizado que abre el input oculto -->
                         <button type="button" class="btn btn-outline-success w-100 py-3 rounded-4 fw-bold shadow-sm" onclick="document.getElementById('archivo').click()">
@@ -183,27 +185,29 @@
     document.addEventListener("DOMContentLoaded", actualizarLineas);
 </script>
 <script>
-    document.getElementById("btn-extraer").addEventListener("click", function() {
-        const enlace = document.getElementById("input-enlace").value;
-        if (!enlace) {
-            alert("⚠️ Por favor ingresa un enlace de Google Drive u otro PDF público.");
-            return;
-        }
+    function subirArchivo(event) {
+        const archivo = event.target.files[0];
+        if (!archivo) return;
     
-        fetch(`/extraer-titulo/?url=${encodeURIComponent(enlace)}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.titulo) {
-                    document.getElementById("campo-titulo").value = data.titulo;
-                } else {
-                    alert("❌ No se pudo extraer el título.");
-                }
-            })
-            .catch(error => {
-                console.error("Error al extraer título:", error);
-                alert("❌ Ocurrió un error al intentar extraer el título.");
-            });
-    });
+        const formData = new FormData();
+        formData.append("file", archivo);
+        formData.append("upload_preset", "tu_upload_preset");  // cambia esto
+        formData.append("cloud_name", "tu_nombre_cloud");      // cambia esto también
+    
+        fetch("https://api.cloudinary.com/v1_1/tu_nombre_cloud/raw/upload", {
+            method: "POST",
+            body: formData
+        })
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById("enlace_archivo").value = data.secure_url;
+            document.getElementById("archivo-nombre").textContent = archivo.name;
+        })
+        .catch(error => {
+            console.error("Error al subir archivo:", error);
+            alert("❌ Falló la subida a Cloudinary.");
+        });
+    }
 </script>
 {% endblock %}
 

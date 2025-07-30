@@ -4,3 +4,5 @@ PyMuPDF
 django-crispy-forms
 crispy-bootstrap4
 requests
+cloudinary
+django-cloudinary-storage
