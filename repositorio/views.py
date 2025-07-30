@@ -207,39 +207,8 @@ class DocumentoEliminarView(DeleteView):
 
 import requests
 import tempfile
-
-def extraer_titulo_ajax(request):
-    enlace = request.GET.get("url", "")
-    if not enlace:
-        return JsonResponse({"error": "No se proporcionó el enlace"}, status=400)
-
-    # 🔧 Si el enlace es de Google Drive, conviértelo en un enlace de descarga
-    match = re.search(r'drive.google.com\/file\/d\/([^/]+)', enlace)
-    if match:
-        file_id = match.group(1)
-        enlace = f"https://drive.google.com/uc?export=download&id={file_id}"
-
-    try:
-        response = requests.get(enlace)
-        if response.status_code != 200:
-            return JsonResponse({"error": f"No se pudo descargar el PDF (código {response.status_code})"})
-
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
-            tmp_file.write(response.content)
-            tmp_file.flush()
-
-            doc = fitz.open(tmp_file.name)
-            texto = ""
-            for pagina in doc.pages(0, min(3, len(doc))):
-                texto += pagina.get_text()
-            doc.close()
-
-        lineas = [line.strip() for line in texto.splitlines() if line.strip()]
-        titulo = lineas[0] if lineas else "No disponible"
-        return JsonResponse({"titulo": titulo})
-
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+from cloudinary.uploader import upload as cloudinary_upload
+from cloudinary.exceptions import Error as CloudinaryError
     
 class DocumentoCreateView(CreateView):
     login_url = 'login'
@@ -278,14 +247,32 @@ class DocumentoCreateView(CreateView):
     def form_valid(self, form):
         documento = form.save(commit=False)
     
-        archivo_pdf = None  # Ruta del PDF final (local o descargado)
+        enlace_manual = self.request.POST.get("enlace_archivo")  # Campo manual
+        archivo_subido = self.request.FILES.get("archivo_pdf")    # Archivo local
+        archivo_pdf = None
     
-        # 🧩 Si hay archivo subido localmente
-        if documento.archivo:
-            archivo_pdf = documento.archivo.path
+        # 🔄 Si el usuario subió un archivo, lo subimos a Cloudinary
+        if archivo_subido:
+            try:
+                cloud_result = cloudinary_upload(
+                    archivo_subido,
+                    resource_type="raw",
+                    folder="repositorio",  # Puedes cambiar el nombre del folder
+                    use_filename=True,
+                    unique_filename=False
+                )
+                documento.enlace = cloud_result["secure_url"]
+                print("✅ Subido a Cloudinary:", documento.enlace)
+            except CloudinaryError as e:
+                print("❌ Error al subir a Cloudinary:", e)
+                return self.form_invalid(form)
     
-        # 🌐 Si no hay archivo subido pero sí hay enlace
-        elif documento.enlace:
+        # 🌐 Si no subió archivo pero pegó un enlace manual
+        elif enlace_manual:
+            documento.enlace = enlace_manual
+    
+        # 🔁 Descargar el archivo PDF desde el enlace (para extraer info)
+        if documento.enlace:
             try:
                 response = requests.get(documento.enlace)
                 if response.status_code == 200:
@@ -297,12 +284,10 @@ class DocumentoCreateView(CreateView):
             except Exception as e:
                 print("❌ Error en la descarga:", e)
     
-        # 🔍 Si se obtuvo un archivo PDF de alguna forma
+        # 📖 Procesar PDF si se logró obtener
         if archivo_pdf:
             texto, num_paginas, ruta_pdf = extraer_texto(archivo_pdf)
-            info_extraida = procesar_documento(archivo_pdf)
-            if info_extraida is None:
-                info_extraida = {}
+            info_extraida = procesar_documento(archivo_pdf) or {}
     
             info_general = info_extraida.get("Información General", {})
             documento.año = detectar_año(texto)
