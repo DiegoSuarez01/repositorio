@@ -246,33 +246,15 @@ class DocumentoCreateView(CreateView):
 
     def form_valid(self, form):
         documento = form.save(commit=False)
+
+        archivo_pdf = None  # Ruta del PDF final (local o descargado)
     
-        enlace_manual = self.request.POST.get("enlace_archivo")  # Campo manual
-        archivo_subido = self.request.FILES.get("archivo_pdf")    # Archivo local
-        archivo_pdf = None
+        # 🧩 Si hay archivo subido localmente
+        if documento.archivo:
+            archivo_pdf = documento.archivo.path
     
-        # 🔄 Si el usuario subió un archivo, lo subimos a Cloudinary
-        if archivo_subido:
-            try:
-                cloud_result = cloudinary_upload(
-                    archivo_subido,
-                    resource_type="raw",
-                    folder="repositorio",  # Puedes cambiar el nombre del folder
-                    use_filename=True,
-                    unique_filename=False
-                )
-                documento.enlace = cloud_result["secure_url"]
-                print("✅ Subido a Cloudinary:", documento.enlace)
-            except CloudinaryError as e:
-                print("❌ Error al subir a Cloudinary:", e)
-                return self.form_invalid(form)
-    
-        # 🌐 Si no subió archivo pero pegó un enlace manual
-        elif enlace_manual:
-            documento.enlace = enlace_manual
-    
-        # 🔁 Descargar el archivo PDF desde el enlace (para extraer info)
-        if documento.enlace:
+        # 🌐 Si no hay archivo subido pero sí hay enlace
+        elif documento.enlace:
             try:
                 response = requests.get(documento.enlace)
                 if response.status_code == 200:
@@ -284,10 +266,12 @@ class DocumentoCreateView(CreateView):
             except Exception as e:
                 print("❌ Error en la descarga:", e)
     
-        # 📖 Procesar PDF si se logró obtener
+        # 🔍 Si se obtuvo un archivo PDF de alguna forma
         if archivo_pdf:
             texto, num_paginas, ruta_pdf = extraer_texto(archivo_pdf)
-            info_extraida = procesar_documento(archivo_pdf) or {}
+            info_extraida = procesar_documento(archivo_pdf)
+            if info_extraida is None:
+                info_extraida = {}
     
             info_general = info_extraida.get("Información General", {})
             documento.año = detectar_año(texto)
@@ -312,7 +296,7 @@ class DocumentoCreateView(CreateView):
         documento.lineas_investigacion.set(lineas_ids)
     
         return redirect(self.get_success_url())
-    
+        
 # Vistas de las licenciaturas
 class DocumentoEView(ListView):
     model = Documento

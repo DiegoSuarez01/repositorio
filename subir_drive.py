@@ -1,54 +1,59 @@
 import os
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload
+import cloudinary
+import cloudinary.uploader
+import fitz  # PyMuPDF
 
-# 📁 Ruta de tus PDFs
-carpeta_pdfs = "C:/Users/User/Desktop/media"  # Ajusta si es necesario
+print("📁 Módulo cloudinary cargado desde:", cloudinary.__file__)
+print("⚙️ cloudinary.config:", getattr(cloudinary, "config", "❌ NO EXISTE"))
 
-# 🔒 Permiso básico para subir archivos
-SCOPES = ['https://www.googleapis.com/auth/drive.file']
+# 🔧 Configura Cloudinary con tus credenciales reales
+cloudinary.config(
+    cloud_name='dacj8yaea',
+    api_key='912348664722477',
+    api_secret='Kf_f5lBlZoLvu6aZBqGN3tPWFH8',
+    secure=True
+)
 
-def autenticar():
-    creds = None
-    if os.path.exists('token.json'):
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
-    else:
-        flow = InstalledAppFlow.from_client_secrets_file('credentials1.json', SCOPES)
-        creds = flow.run_local_server(port=0)
-        with open('token.json', 'w') as token:
-            token.write(creds.to_json())
-    return creds
+# 📁 Carpeta local donde están tus PDFs
+carpeta_pdfs = 'C:\\Users\\User\\Desktop\\media'
 
-def subir_a_drive(service, ruta_pdf):
-    nombre_archivo = os.path.basename(ruta_pdf)
-    metadata = {'name': nombre_archivo}
-    media = MediaFileUpload(ruta_pdf, mimetype='application/pdf')
-    archivo = service.files().create(body=metadata, media_body=media, fields='id').execute()
+# 🔧 Límite de tamaño (10MB)
+MAX_TAMANO = 10 * 1024 * 1024  # 10 MB en bytes
 
-    file_id = archivo.get('id')
+def comprimir_pdf(ruta_original, ruta_comprimida):
+    try:
+        doc = fitz.open(ruta_original)
+        doc.save(ruta_comprimida, garbage=4, deflate=True)
+        doc.close()
+        print(f"✅ Comprimido: {os.path.basename(ruta_comprimida)}")
+    except Exception as e:
+        print(f"❌ Error al comprimir {ruta_original}: {e}")
 
-    # Compartir enlace público
-    service.permissions().create(
-        fileId=file_id,
-        body={'type': 'anyone', 'role': 'reader'}
-    ).execute()
+def subir_pdf(ruta_pdf):
+    try:
+        res = cloudinary.uploader.upload(ruta_pdf, resource_type="raw")
+        print(f"✅ Subido correctamente: {os.path.basename(ruta_pdf)}")
+        print(f"🌐 URL: {res['secure_url']}")
+    except Exception as e:
+        print(f"❌ Error al subir {ruta_pdf}: {e}")
+# 🔄 Subir todos los PDF
+for archivo in os.listdir(carpeta_pdfs):
+    if archivo.lower().endswith('.pdf'):
+        ruta = os.path.join(carpeta_pdfs, archivo)
+        tamano = os.path.getsize(ruta)
+        nombre_sin_extension = os.path.splitext(archivo)[0]
 
-    enlace = f"https://drive.google.com/file/d/{file_id}/view"
-    return nombre_archivo, enlace
+        print(f"📄 Procesando: {archivo} ({round(tamano / (1024 * 1024), 2)} MB)")
 
-def subir_todos():
-    creds = autenticar()
-    service = build('drive', 'v3', credentials=creds)
+        if tamano > MAX_TAMANO:
+            ruta_comprimida = os.path.join(carpeta_pdfs, f"{nombre_sin_extension}_comprimido.pdf")
+            comprimir_pdf(ruta, ruta_comprimida)
 
-    for archivo in os.listdir(carpeta_pdfs):
-        if archivo.lower().endswith('.pdf'):
-            ruta = os.path.join(carpeta_pdfs, archivo)
-            print(f"📤 Subiendo: {archivo}")
-            nombre, enlace = subir_a_drive(service, ruta)
-            print(f"✅ {nombre} → {enlace}")
-            print("-" * 60)
+            if os.path.exists(ruta_comprimida):
+                subir_pdf(ruta_comprimida, nombre_sin_extension)
+            else:
+                print(f"⚠️ No se generó el archivo comprimido para: {archivo}")
+        else:
+            subir_pdf(ruta, nombre_sin_extension)
 
-if __name__ == "__main__":
-    subir_todos()
+        print("-" * 50)
