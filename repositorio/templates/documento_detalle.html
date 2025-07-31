@@ -249,16 +249,7 @@
      <tr>
       <th>ARCHIVO</th>
       <td>
-        {% if object.archivo %}
           Si desea consultar el documento completo el enlace lo direcciona al repositorio de la Universidad Pedagógica Nacional para su respectiva consulta y descarga.
-        {% else %}
-          <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            <label for="archivo">Subir archivo:</label>
-            <input type="file" name="archivo">
-            <button type="submit">Subir</button>
-          </form>
-        {% endif %}
       </td>
     </tr>
     <tr>

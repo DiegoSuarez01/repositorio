@@ -207,8 +207,7 @@ class DocumentoEliminarView(DeleteView):
 
 import requests
 import tempfile
-from cloudinary.uploader import upload as cloudinary_upload
-from cloudinary.exceptions import Error as CloudinaryError
+
     
 class DocumentoCreateView(CreateView):
     login_url = 'login'
@@ -251,20 +250,14 @@ class DocumentoCreateView(CreateView):
     
         # 🧩 Si hay archivo subido localmente
         if documento.archivo:
-            archivo_pdf = documento.archivo.path
-    
-        # 🌐 Si no hay archivo subido pero sí hay enlace
-        elif documento.enlace:
             try:
-                response = requests.get(documento.enlace)
+                response = requests.get(documento.archivo.url)
                 if response.status_code == 200:
                     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
                         tmp_file.write(response.content)
                         archivo_pdf = tmp_file.name
-                else:
-                    print("❌ Error descargando el PDF desde el enlace.")
             except Exception as e:
-                print("❌ Error en la descarga:", e)
+                print("❌ Error descargando el PDF desde S3:", e)
     
         # 🔍 Si se obtuvo un archivo PDF de alguna forma
         if archivo_pdf:
