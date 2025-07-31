@@ -32,8 +32,14 @@ def comprimir_pdf(ruta_original, ruta_comprimida):
 def subir_pdf(ruta_pdf):
     try:
         res = cloudinary.uploader.upload(ruta_pdf, resource_type="raw")
+        url = res['secure_url']
         print(f"✅ Subido correctamente: {os.path.basename(ruta_pdf)}")
-        print(f"🌐 URL: {res['secure_url']}")
+        print(f"🌐 URL: {url}")
+
+        # 📝 Guardar en archivo de texto
+        with open("enlaces_subidos.txt", "a", encoding="utf-8") as f:
+            f.write(f"{os.path.basename(ruta_pdf)}: {url}\n")
+
     except Exception as e:
         print(f"❌ Error al subir {ruta_pdf}: {e}")
 # 🔄 Subir todos los PDF
@@ -50,10 +56,10 @@ for archivo in os.listdir(carpeta_pdfs):
             comprimir_pdf(ruta, ruta_comprimida)
 
             if os.path.exists(ruta_comprimida):
-                subir_pdf(ruta_comprimida, nombre_sin_extension)
+                subir_pdf(ruta_comprimida)
             else:
                 print(f"⚠️ No se generó el archivo comprimido para: {archivo}")
         else:
-            subir_pdf(ruta, nombre_sin_extension)
+            subir_pdf(ruta)
 
         print("-" * 50)

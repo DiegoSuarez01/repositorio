@@ -13,28 +13,22 @@
 
                 <!-- 🔹 Sección de Archivo -->
                 <fieldset class="mb-4">
-                  <legend class="fw-bold text-primary">📑 Archivo</legend>
-                  <div class="archivo-upload">
-                    
-                    <!-- ✅ Campo para pegar automáticamente el enlace generado -->
-                    <input type="url" id="enlace_archivo" name="enlace_archivo" placeholder="https://..." class="form-control mb-2">
+                    <legend class="fw-bold text-primary">📑 Archivo</legend>
+                    <div class="archivo-upload">
                 
-                    <!-- ✅ Botón estilizado para abrir el input file -->
-                    <button type="button" class="btn btn-outline-success w-100 py-3 rounded-4 fw-bold shadow-sm"
-                            onclick="document.getElementById('archivo').click()">
-                      📤 Seleccionar archivo PDF
-                    </button>
+                        <!-- ✅ Input real oculto con name e id -->
+                        <input type="url" name="enlace_archivo" placeholder="https://res.cloudinary.com/..." class="form-control">
                 
-                    <!-- ✅ Input de archivo oculto -->
-                    <input type="file" id="archivo" name="archivo_pdf" accept=".pdf" style="display: none;"
-                           onchange="mostrarNombreArchivo(this); subirArchivo(event)">
-                
-                    <!-- ✅ Mostrar nombre del archivo cargado -->
-                    <div id="archivo-nombre" class="mt-2 text-secondary fst-italic">Ningún archivo seleccionado</div>
-                  </div>
+                        <!-- ✅ Botón estilizado que abre el input oculto -->
+                        <button type="button" class="btn btn-outline-success w-100 py-3 rounded-4 fw-bold shadow-sm" onclick="document.getElementById('archivo').click()">
+                            📤 Seleccionar archivo PDF
+                        </button>            
+                        <!-- ✅ Nombre del archivo -->
+                        <div id="archivo-nombre" class="mt-2 text-secondary fst-italic">Ningún archivo seleccionado</div>
+                    </div>
                 </fieldset>
                 
-                
+
                 <!-- 🔹 Sección de Enlace -->
                 <fieldset class="mb-4">
                     <legend class="fw-bold text-primary">🔗 Enlace</legend>
@@ -147,6 +141,13 @@
     }
 </style>
 
+<!-- 🔹 Script para mostrar nombre del archivo seleccionado -->
+<script>
+    function mostrarNombreArchivo(input) {
+        const nombreArchivo = input.files.length > 0 ? input.files[0].name : "Ningún archivo seleccionado";
+        document.getElementById("archivo-nombre").textContent = nombreArchivo;
+    }
+</script>
 <script>
     const lineasPorCategoria = {
         "electronica": {{ linea_data.electronica|safe }},
@@ -164,12 +165,12 @@
         container.innerHTML = "";
 
         lineas.forEach(linea => {
-            const id = `linea-${linea.id}`;
-            const checkboxHTML = `
+            const id = linea-${linea.id};
+            const checkboxHTML = 
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" name="lineas_investigacion" id="${id}" value="${linea.id}">
                     <label class="form-check-label" for="${id}">${linea.nombre}</label>
-                </div>`;
+                </div>;
             container.insertAdjacentHTML("beforeend", checkboxHTML);
         });
     }
@@ -177,39 +178,4 @@
     categoriaSelect.addEventListener("change", actualizarLineas);
     document.addEventListener("DOMContentLoaded", actualizarLineas);
 </script>
-<script>
-      function mostrarNombreArchivo(input) {
-        const nombre = input.files.length > 0 ? input.files[0].name : "Ningún archivo seleccionado";
-        document.getElementById("archivo-nombre").textContent = nombre;
-      }
-    
-      function subirArchivo(event) {
-        const archivo = event.target.files[0];
-        if (!archivo) return;
-    
-        const formData = new FormData();
-        formData.append("file", archivo);
-        formData.append("upload_preset", "mi_preset");  // 🔁 Reemplaza por tu upload preset
-        formData.append("cloud_name", "dacj8yaea");      // 🔁 Tu cloud name real
-    
-        fetch("https://api.cloudinary.com/v1_1/dacj8yaea/raw/upload", {
-          method: "POST",
-          body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.secure_url) {
-            document.getElementById("enlace_archivo").value = data.secure_url;
-            alert("✅ Archivo subido correctamente a Cloudinary.");
-          } else {
-            alert("❌ Error al subir el archivo.");
-          }
-        })
-        .catch(err => {
-          console.error("Error al subir a Cloudinary:", err);
-          alert("❌ Error al subir archivo.");
-        });
-      }
-</script>
-
 {% endblock %}
