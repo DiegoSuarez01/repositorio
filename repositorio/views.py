@@ -251,13 +251,16 @@ class DocumentoCreateView(CreateView):
         # 🧩 Si hay archivo subido localmente
         if documento.archivo:
             try:
-                response = requests.get(documento.archivo.url)
+                archivo_url = documento.archivo.url
+                response = requests.get(archivo_url)
                 if response.status_code == 200:
                     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
                         tmp_file.write(response.content)
                         archivo_pdf = tmp_file.name
+                else:
+                    print(f"❌ Error al obtener el archivo desde S3. Código: {response.status_code}")
             except Exception as e:
-                print("❌ Error descargando el PDF desde S3:", e)
+                print("❌ Error descargando archivo desde S3:", e)
     
         # 🔍 Si se obtuvo un archivo PDF de alguna forma
         if archivo_pdf:
