@@ -245,13 +245,12 @@ class DocumentoCreateView(CreateView):
 
     def form_valid(self, form):
         documento = form.save(commit=False)
-
-        archivo_pdf = None  # Ruta del PDF final (local o descargado)
+        archivo_pdf = None
     
-        # 🧩 Si hay archivo subido localmente
+        # 🧩 Si hay archivo subido localmente (Amazon S3)
         if documento.archivo:
             try:
-                archivo_url = documento.archivo.url
+                archivo_url = documento.archivo.url  # ✅ funciona con S3
                 response = requests.get(archivo_url)
                 if response.status_code == 200:
                     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
@@ -262,28 +261,43 @@ class DocumentoCreateView(CreateView):
             except Exception as e:
                 print("❌ Error descargando archivo desde S3:", e)
     
-        # 🔍 Si se obtuvo un archivo PDF de alguna forma
-        if archivo_pdf:
-            texto, num_paginas, ruta_pdf = extraer_texto(archivo_pdf)
-            info_extraida = procesar_documento(archivo_pdf)
-            if info_extraida is None:
-                info_extraida = {}
+        # 🌐 Si no hay archivo subido, pero sí un enlace manual
+        elif documento.enlace_archivo:
+            try:
+                response = requests.get(documento.enlace)
+                if response.status_code == 200:
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+                        tmp_file.write(response.content)
+                        archivo_pdf = tmp_file.name
+                else:
+                    print("❌ Error descargando el PDF desde el enlace.")
+            except Exception as e:
+                print("❌ Error en la descarga desde enlace:", e)
     
-            info_general = info_extraida.get("Información General", {})
-            documento.año = detectar_año(texto)
-            documento.titulo = info_general.get("TÍTULO", "No disponible")
-            documento.autor = info_general.get("AUTOR(ES)", "No disponible")
-            documento.director = info_general.get("DIRECTOR", "No registrado")
-            documento.palabras_clave = info_general.get("PALABRAS CLAVE", "No disponibles")
-            documento.unidad_patrocinante = info_general.get("UNIDAD PATROCINANTE", "No disponible")
-            documento.publicacion = info_general.get("PUBLICACIÓN", "No disponible")
-            documento.descripcion = info_extraida.get("Descripción", "No disponible")
-            documento.metodologia = info_extraida.get("Metodología", "No disponible")
-            documento.contenidos = info_extraida.get("Contenidos", "No disponible")
-            documento.conclusiones = info_extraida.get("Conclusiones", "No disponible")
+        # 🛑 Si no hay ninguna fuente válida
+        if not archivo_pdf:
+            form.add_error(None, "No se pudo obtener el archivo. Verifica el archivo o el enlace.")
+            return self.form_invalid(form)
     
-            fuentes = info_extraida.get("Fuentes", "No disponible")
-            documento.fuentes = "\n".join(fuentes) if isinstance(fuentes, list) else fuentes
+        # ✅ Extraer información como siempre
+        texto, num_paginas, ruta_pdf = extraer_texto(archivo_pdf)
+        info_extraida = procesar_documento(archivo_pdf) or {}
+    
+        info_general = info_extraida.get("Información General", {})
+        documento.año = detectar_año(texto)
+        documento.titulo = info_general.get("TÍTULO", "No disponible")
+        documento.autor = info_general.get("AUTOR(ES)", "No disponible")
+        documento.director = info_general.get("DIRECTOR", "No registrado")
+        documento.palabras_clave = info_general.get("PALABRAS CLAVE", "No disponibles")
+        documento.unidad_patrocinante = info_general.get("UNIDAD PATROCINANTE", "No disponible")
+        documento.publicacion = info_general.get("PUBLICACIÓN", "No disponible")
+        documento.descripcion = info_extraida.get("Descripción", "No disponible")
+        documento.metodologia = info_extraida.get("Metodología", "No disponible")
+        documento.contenidos = info_extraida.get("Contenidos", "No disponible")
+        documento.conclusiones = info_extraida.get("Conclusiones", "No disponible")
+    
+        fuentes = info_extraida.get("Fuentes", "No disponible")
+        documento.fuentes = "\n".join(fuentes) if isinstance(fuentes, list) else fuentes
     
         # 🎯 Guardar categoría y líneas
         lineas_ids = self.request.POST.getlist("lineas_investigacion")

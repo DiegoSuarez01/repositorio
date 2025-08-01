@@ -15,13 +15,18 @@
                 <fieldset class="mb-4">
                     <legend class="fw-bold text-primary">📑 Subir Archivo PDF</legend>
                     <div class="archivo-upload">
-                
+                    
                         <!-- Campo para subir el archivo -->
                         <input type="file" id="archivo" name="archivo" accept="application/pdf"
                                class="form-control mb-2" onchange="mostrarNombreArchivo(this)">
-                
+                    
                         <!-- Nombre del archivo seleccionado -->
-                        <div id="archivo-nombre" class="text-secondary fst-italic">Ningún archivo seleccionado</div>
+                        <div id="archivo-nombre" class="text-secondary fst-italic mb-3">Ningún archivo seleccionado</div>
+                
+                        <!-- Campo alternativo: Enlace al archivo -->
+                        <label for="id_enlace_archivo" class="fw-bold text-success">🌐 O ingresa un enlace al PDF (por ejemplo, de Drive o S3):</label>
+                        <input type="url" id="id_enlace_archivo" name="enlace_archivo" placeholder="https://..." class="form-control">
+                        <small class="text-muted">Este campo es opcional. Si subes un archivo, el enlace se ignorará.</small>
                     </div>
                 </fieldset>
                 
