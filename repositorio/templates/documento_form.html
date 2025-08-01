@@ -25,16 +25,20 @@
             <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
                 {% csrf_token %}
 
-
+                <!-- ✅ Campo para ingresar un enlace manual -->
+                <fieldset class="mb-4">
+                    <legend class="fw-bold text-primary">🔗 Enlace</legend>
+                    <div class="row">
+                        <div class="col-md-3 text-end fw-bold">Enlace del Documento:</div>
+                        <div class="col-md-9">
+                            {{ form.enlace_archivo }}
+                        </div>
+                    </div>
+                </fieldset>
                 <!-- 🔹 Sección de Archivo -->
                <fieldset class="mb-4">
                     <legend class="fw-bold text-primary">📑 Archivo</legend>
-                    <div class="archivo-upload">
-                        
-                        <!-- ✅ Campo para ingresar un enlace manual -->
-                        <label for="enlace_archivo" class="form-label mt-2 fw-semibold text-dark">O pega un enlace directo al PDF (Amazon S3 o externo):</label>
-                        <input type="url" name="enlace_archivo" id="enlace_archivo" class="form-control mb-3"
-                               placeholder="https://repositorio-dte.s3.amazonaws.com/documento.pdf">
+                    <div class="archivo-upload">                      
                 
                         <!-- ✅ Input real oculto con name e id para archivo local -->
                         <input type="file" name="archivo" id="archivo" class="d-none" accept=".pdf" onchange="mostrarNombreArchivo(this)">

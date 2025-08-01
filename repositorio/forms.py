@@ -25,7 +25,7 @@ class DocumentoForm(forms.ModelForm):
     )
     class Meta:
         model = Documento
-        fields = ['archivo', 'titulo', 'autor','publicacion', 'unidad_patrocinante' ,'palabras_clave', 'metodologia', 
+        fields = ['archivo', 'enlace_archivo','titulo', 'autor','publicacion', 'unidad_patrocinante' ,'palabras_clave', 'metodologia', 
                   'descripcion', 'fuentes', 'conclusiones','contenidos', 'director', 'enlace', 'categoria','lineas_investigacion']
         
         widgets = {
