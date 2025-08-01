@@ -170,7 +170,7 @@ def asegurar_lineas_investigacion():
             LineaInvestigacion.objects.get_or_create(nombre=nombre)
 
 class DocumentoUpdateView(UpdateView):
-    asegurar_lineas_investigacion()
+    
     model = Documento
     form_class = DocumentoForm
     template_name = 'documento_editar.html'
@@ -180,6 +180,7 @@ class DocumentoUpdateView(UpdateView):
         return reverse_lazy('documento_detalle', kwargs={'pk': self.object.pk})
 
     def get_context_data(self, **kwargs):
+        asegurar_lineas_investigacion()
         context = super().get_context_data(**kwargs)
         
         # Generar lista con id y nombre para cada línea
