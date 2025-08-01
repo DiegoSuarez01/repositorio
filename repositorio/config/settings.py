@@ -89,7 +89,10 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
+    'default': dj_database_url.parse(
+        'postgresql://repositorio_db_nfje_user:3hWErMTH5sQdITlshzpUM7qS0MUiD00b@dpg-d26jd70gjchc73etg5m0-a.oregon-postgres.render.com/repositorio_db_nfje',
+        conn_max_age=600
+    )
 }
 
 
