@@ -27,17 +27,23 @@
 
 
                 <!-- 🔹 Sección de Archivo -->
-                <fieldset class="mb-4">
+               <fieldset class="mb-4">
                     <legend class="fw-bold text-primary">📑 Archivo</legend>
                     <div class="archivo-upload">
+                        
+                        <!-- ✅ Campo para ingresar un enlace manual -->
+                        <label for="enlace_archivo" class="form-label mt-2 fw-semibold text-dark">O pega un enlace directo al PDF (Amazon S3 o externo):</label>
+                        <input type="url" name="enlace_archivo" id="enlace_archivo" class="form-control mb-3"
+                               placeholder="https://repositorio-dte.s3.amazonaws.com/documento.pdf">
                 
-                        <!-- ✅ Input real oculto con name e id -->
-                        <input type="file" name="archivo" id="archivo" class="d-none" accept=".pdf" onchange="mostrarNombreArchivo(this)" required>
+                        <!-- ✅ Input real oculto con name e id para archivo local -->
+                        <input type="file" name="archivo" id="archivo" class="d-none" accept=".pdf" onchange="mostrarNombreArchivo(this)">
                 
                         <!-- ✅ Botón estilizado que abre el input oculto -->
                         <button type="button" class="btn btn-outline-success w-100 py-3 rounded-4 fw-bold shadow-sm" onclick="document.getElementById('archivo').click()">
                             📤 Seleccionar archivo PDF
                         </button>            
+                
                         <!-- ✅ Nombre del archivo -->
                         <div id="archivo-nombre" class="mt-2 text-secondary fst-italic">Ningún archivo seleccionado</div>
                     </div>

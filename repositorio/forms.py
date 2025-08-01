@@ -41,7 +41,7 @@ class DocumentoForm(forms.ModelForm):
             'conclusiones': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Conclusiones (opcional)'}),
             'director': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Director (opcional)'}),
             'archivo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
-    
+            'enlace_archivo' : forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://...'}),
             'enlace': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'Enlace (opcional)'}),
             'categoria': forms.Select(attrs={'class': 'form-control'}),
             'lineas_investigacion': forms.CheckboxSelectMultiple(),   
