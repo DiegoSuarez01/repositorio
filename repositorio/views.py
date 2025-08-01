@@ -262,9 +262,9 @@ class DocumentoCreateView(CreateView):
                 print("❌ Error descargando archivo desde S3:", e)
     
         # 🌐 Si no hay archivo subido, pero sí un enlace manual
-        elif documento.enlace_archivo:
+        elif documento.enlace:
             try:
-                response = requests.get(documento.enlace_archivo)
+                response = requests.get(documento.enlace)
                 if response.status_code == 200:
                     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
                         tmp_file.write(response.content)

@@ -28,20 +28,18 @@
 
                 <!-- 🔹 Sección de Archivo -->
                 <fieldset class="mb-4">
-                    <legend class="fw-bold text-primary">📑 Subir Archivo PDF</legend>
+                    <legend class="fw-bold text-primary">📑 Archivo</legend>
                     <div class="archivo-upload">
-                    
-                        <!-- Campo para subir el archivo -->
-                        <input type="file" id="archivo" name="archivo" accept="application/pdf"
-                               class="form-control mb-2" onchange="mostrarNombreArchivo(this)">
-                    
-                        <!-- Nombre del archivo seleccionado -->
-                        <div id="archivo-nombre" class="text-secondary fst-italic mb-3">Ningún archivo seleccionado</div>
                 
-                        <!-- Campo alternativo: Enlace al archivo -->
-                        <label for="id_enlace_archivo" class="fw-bold text-success">🌐 O ingresa un enlace al PDF (por ejemplo, de Drive o S3):</label>
-                        <input type="url" id="id_enlace_archivo" name="enlace_archivo" placeholder="https://..." class="form-control">
-        
+                        <!-- ✅ Input real oculto con name e id -->
+                        <input type="file" name="archivo" id="archivo" class="d-none" accept=".pdf" onchange="mostrarNombreArchivo(this)" required>
+                
+                        <!-- ✅ Botón estilizado que abre el input oculto -->
+                        <button type="button" class="btn btn-outline-success w-100 py-3 rounded-4 fw-bold shadow-sm" onclick="document.getElementById('archivo').click()">
+                            📤 Seleccionar archivo PDF
+                        </button>            
+                        <!-- ✅ Nombre del archivo -->
+                        <div id="archivo-nombre" class="mt-2 text-secondary fst-italic">Ningún archivo seleccionado</div>
                     </div>
                 </fieldset>
                 
