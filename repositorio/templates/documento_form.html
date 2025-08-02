@@ -25,16 +25,7 @@
             <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
                 {% csrf_token %}
 
-                <!-- ✅ Campo para ingresar un enlace manual -->
-                <fieldset class="mb-4">
-                    <legend class="fw-bold text-primary">🔗 Enlace</legend>
-                    <div class="row">
-                        <div class="col-md-3 text-end fw-bold">Enlace del Documento:</div>
-                        <div class="col-md-9">
-                            {{ form.enlace_archivo }}
-                        </div>
-                    </div>
-                </fieldset>
+            
                 <!-- 🔹 Sección de Archivo -->
                <fieldset class="mb-4">
                     <legend class="fw-bold text-primary">📑 Archivo</legend>
