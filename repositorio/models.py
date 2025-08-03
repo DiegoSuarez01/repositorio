@@ -38,7 +38,7 @@ class Documento(models.Model):
     contenidos = models.TextField(blank=True, null=True)
     conclusiones = models.TextField(blank=True, null=True)
     fuentes = models.TextField(blank=True, null=True)
-    enlace = models.URLField(blank=True, null=True)   
+    enlace = models.URLField(max_length=500, blank=True, null=True)   
     archivo = models.FileField(upload_to='documentos/', max_length=255, blank=True, null=True)
     
     año = models.CharField(max_length=4, blank=True, null=True)
