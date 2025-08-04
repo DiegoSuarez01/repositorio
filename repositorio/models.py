@@ -30,7 +30,7 @@ class Documento(models.Model):
     titulo = models.CharField(max_length=255, blank=True, null=True)
     autor = models.CharField(max_length=255, blank=True, null=True)
     director = models.CharField(max_length=255, blank=True, null=True)
-    palabras_clave = models.CharField(max_length=255, blank=True, null=True)
+    palabras_clave = models.TextField(blank=True, null=True)
     unidad_patrocinante = models.CharField(max_length=255, blank=True, null=True)
     publicacion = models.CharField(max_length=255, blank=True, null=True)
     descripcion = models.TextField(blank=True, null=True)
