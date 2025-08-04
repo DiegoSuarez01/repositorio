@@ -2,20 +2,19 @@ from django.conf import settings
 from django.shortcuts import render, redirect
 import fitz  # PyMuPDF
 from django.views.generic.edit import UpdateView
-from django.views.generic import CreateView, ListView, DetailView, DeleteView, View
+from django.views.generic import CreateView, ListView, DetailView, DeleteView
 from .models import Documento
 from .forms import DocumentoForm
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.urls import reverse_lazy
-from django.db.models import Q
+
 import re
 from collections import Counter
 from repositorio.models import LineaInvestigacion
 from django.utils.safestring import mark_safe
 import json
 
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import login
 from django.contrib.auth.forms import AuthenticationForm
 
 def login_view(request):
@@ -24,7 +23,7 @@ def login_view(request):
         if form.is_valid():
             usuario = form.get_user()
             login(request, usuario)
-            return redirect('principal')  # Usa el nombre de tu URL
+            return redirect('principal')
     else:
         form = AuthenticationForm()
     return render(request, 'login.html', {'form': form})
@@ -110,10 +109,10 @@ def resultados_busqueda_view(request):
     linea_filtro = request.GET.get('linea', '')
     año_filtro = request.GET.get('año', '')
 
-    # 🔹 Obtener todos los años disponibles (antes de filtrar)
+    # Obtener todos los años disponibles (antes de filtrar)
     años = Documento.objects.exclude(año__isnull=True).values_list('año', flat=True).distinct().order_by('-año')
 
-    # 🔹 Obtener todos los documentos (sin filtros aún)
+    # Obtener todos los documentos (sin filtros aún)
     documentos = Documento.objects.all()
 
     if query:
@@ -146,7 +145,7 @@ def resultados_busqueda_view(request):
         'categorias': categorias,
         'lineas': lineas,
         'año_filtro': año_filtro,
-        'años': años,  # <- Esta lista sí se va a mostrar al cargar la página
+        'años': años, 
     })
 
 LINEAS_INVESTIGACION = {
@@ -248,10 +247,9 @@ class DocumentoCreateView(CreateView):
         documento = form.save(commit=False)
         archivo_pdf = None
     
-        # 🧩 Si hay archivo subido localmente (Amazon S3)
         if documento.archivo:
             try:
-                archivo_url = documento.archivo.url  # ✅ funciona con S3
+                archivo_url = documento.archivo.url
                 response = requests.get(archivo_url)
                 if response.status_code == 200:
                     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
@@ -262,7 +260,7 @@ class DocumentoCreateView(CreateView):
             except Exception as e:
                 print("❌ Error descargando archivo desde S3:", e)
     
-        # 🌐 Si no hay archivo subido, pero sí un enlace manual
+        # Si no hay archivo subido, pero sí un enlace manual
         elif documento.enlace:
             try:
                 response = requests.get(documento.enlace)
@@ -275,12 +273,11 @@ class DocumentoCreateView(CreateView):
             except Exception as e:
                 print("❌ Error en la descarga desde enlace:", e)
     
-        # 🛑 Si no hay ninguna fuente válida
+
         if not archivo_pdf:
             form.add_error(None, "No se pudo obtener el archivo. Verifica el archivo o el enlace.")
             return self.form_invalid(form)
     
-        # ✅ Extraer información como siempre
         texto, num_paginas, ruta_pdf = extraer_texto(archivo_pdf)
         info_extraida = procesar_documento(archivo_pdf) or {}
     
@@ -300,7 +297,7 @@ class DocumentoCreateView(CreateView):
         fuentes = info_extraida.get("Fuentes", "No disponible")
         documento.fuentes = "\n".join(fuentes) if isinstance(fuentes, list) else fuentes
     
-        # 🎯 Guardar categoría y líneas
+        # Guardar categoría y líneas
         lineas_ids = self.request.POST.getlist("lineas_investigacion")
         documento.categoria = form.cleaned_data['categoria']
         documento.save()
@@ -338,6 +335,7 @@ class DocumentoDetailView(DetailView):
     template_name = 'documento_detalle.html'
 
 # ----------- EXTRACCIÓN DE INFORMACIÓN -----------
+#..................................................
 
 def extraer_texto(pdf_path):
     # Abrir el archivo PDF
@@ -365,7 +363,7 @@ def eliminar_tabla_contenido(doc):
         texto_pagina = pagina.get_text()
         lineas = texto_pagina.splitlines()
 
-        # 🔹 Paso 1: detectar inicio del índice
+        # Paso 1: detectar inicio del índice
         if not eliminar:
             if re.search(r"(?i)(TABLA\s+DE\s+CONTENIDO|Índice\s+de\s+contenido|Contenido|Tabla\s+de\s+contenidos)", texto_pagina):
                 eliminar = True
@@ -373,7 +371,7 @@ def eliminar_tabla_contenido(doc):
                 print(f"📌 Tabla de contenido detectada en página {i+1}, analizando siguientes páginas...")
                 continue
 
-        # 🔹 Paso 2: si estamos eliminando, revisar si esta página es índice (basado en numeraciones)
+        #  Paso 2: si estamos eliminando, revisar si esta página es índice (basado en numeraciones)
         if eliminar and saltando:
             total = len(lineas)
             if total == 0:
@@ -391,7 +389,7 @@ def eliminar_tabla_contenido(doc):
             else:
                 saltando = False  # Ya no estamos en tabla de contenido
 
-        # 🔹 Paso 3: conservar el resto de las páginas
+        # Paso 3: conservar el resto de las páginas
         texto_total += texto_pagina
 
     return texto_total
@@ -564,7 +562,7 @@ def extraer_info_sin_formato_rae(texto, num_paginas, ruta_pdf):
         nombres_unicos = []
     
         for nombre in posibles_nombres:
-            if nombre not in vistos and es_nombre_valido(nombre):  # <- asumes que ya tienes esta función
+            if nombre not in vistos and es_nombre_valido(nombre):
                 vistos.add(nombre)
                 nombres_unicos.append(nombre)
             if len(nombres_unicos) == 3:
@@ -908,13 +906,13 @@ def extraer_secciones_sin_formato_rae(texto, num_paginas, ruta_pdf):
     # Abrimos el documento
     doc = fitz.open(ruta_pdf)
 
-    # 1. Extraer CONTENIDOS antes de eliminar la tabla
+    # Extraer CONTENIDOS antes de eliminar la tabla
     contenidos = extraer_contenidos(texto)
 
-    # 2. Eliminar tabla de contenido directamente desde el documento
+    # Eliminar tabla de contenido directamente desde el documento
     texto = eliminar_tabla_contenido(doc)
 
-    # 3. Limpiar numeraciones sueltas (después de eliminar tabla)
+    # Limpiar numeraciones sueltas (después de eliminar tabla)
     texto = re.sub(r'\n\s*\d+\s*\n', '', texto)
 
     cierres = [
@@ -922,7 +920,7 @@ def extraer_secciones_sin_formato_rae(texto, num_paginas, ruta_pdf):
         r"(?=\.\s*\n)"          # Coincidencia por punto seguido de salto de línea
     ]
 
-    # 4. Extraer otras secciones con el texto limpio
+    # Extraer otras secciones con el texto limpio
     secciones = {
         "Información General": extraer_info_sin_formato_rae(texto, num_paginas, ruta_pdf),
         "Descripción": extraer_descripcion(texto, cierres),
@@ -932,7 +930,7 @@ def extraer_secciones_sin_formato_rae(texto, num_paginas, ruta_pdf):
         "Conclusiones": extraer_conclusiones(texto, cierres)
     }
 
-    # 5. Palabras clave inferidas con base en otras secciones
+    # Palabras clave inferidas con base en otras secciones
     info_general = secciones.get("Información General", {})
     titulo = info_general.get("TÍTULO", "")
     descripcion = secciones["Descripción"]
@@ -960,7 +958,7 @@ def extraer_palabras_c(texto):
         if not linea:
             continue
 
-        # Detenerse si hay un número (por seguridad)
+        # Detenerse si hay un número
         if re.search(r"\b\d+\b", linea):
             break
 
@@ -1082,7 +1080,7 @@ def limpiar_encabezados(texto):
     for patron in patrones_excluir:
         texto = re.sub(patron, "", texto)
 
-    # ✅ Elimina líneas vacías y espacios extra
+    # Elimina líneas vacías y espacios extra
     texto = "\n".join([line.strip() for line in texto.split("\n") if line.strip()])
 
     return texto.strip()

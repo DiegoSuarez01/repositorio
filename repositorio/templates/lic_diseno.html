@@ -3,14 +3,14 @@
 
 {% block content %}
 
-<!-- 🔹 Encabezado -->
+
 <div class="header d-flex justify-content-between align-items-center">
   <img src="https://www.upn.edu.co/wp-content/uploads/2023/07/Logo-blanco-fondo-azul-UPN.jpg" alt="UPN Logo" class="header-logo">
   <h1 class="titulo-marca-agua">📚 Trabajos de Grado - Licenciatura en Diseño</h1>
   <img src="https://cienciaytecnologia.upn.edu.co/wp-content/uploads/2023/04/DTE-11.png" alt="DTE Logo" class="header-logo">
 </div>
 
-<!-- 🔍 Lista de Documentos -->
+
 <div class="row mt-4">
     {% if object_list %}
         {% for documento in object_list %}
@@ -19,7 +19,7 @@
                 <div class="card-body">
                     <h3 class="document-title">{{ documento.titulo|default:"(Sin título)" }}</h3>
 
-                    <!-- 🔹 Muestra todas las líneas de investigación con iconos -->
+                    <!-- Muestra todas las líneas de investigación con iconos -->
                     <div class="research-lines">
                         {% for linea in documento.lineas_investigacion.all %}
                             <div class="linea-item">
@@ -63,7 +63,7 @@
     {% endif %}
 </div>
 
-<!-- 🎨 Estilos Personalizados -->
+
 <style>
     body {
         background-color: #e0f7fa;
@@ -135,7 +135,7 @@
         margin-top: 5px;
     }
 
-    /* 🔹 Iconos de líneas de investigación */
+
     .research-lines i {
         font-size: 18px;
         color: #00796b;
@@ -143,7 +143,7 @@
         transition: transform 0.2s ease-in-out;
     }
 
-    /* Efecto al pasar el mouse */
+
     .research-lines i:hover {
         transform: scale(1.2);
     }

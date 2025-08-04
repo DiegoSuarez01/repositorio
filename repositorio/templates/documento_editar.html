@@ -24,13 +24,13 @@
             <form method="POST" class="needs-validation" novalidate>
                 {% csrf_token %}
 
-                <!-- 🔹 Categoría -->
+                <!-- Categoría -->
                 <div class="col-md-6 form-floating mb-3">
                     {{ form.categoria }}
                     <label for="{{ form.categoria.id_for_label }}">📂 Categoría *</label>
                 </div>
 
-                <!-- 🔹 Información básica -->
+                <!-- Información básica -->
                 <div class="row">
                     <div class="col-md-6 form-floating mb-3">
                         {{ form.titulo }}
@@ -58,7 +58,7 @@
                     </div>
                 </div>
 
-                <!-- 🔹 Contenido del documento -->
+                <!-- Contenido del documento -->
                 <div class="row">
                     <div class="col-md-6 form-floating mb-3">
                         {{ form.descripcion }}
@@ -78,13 +78,13 @@
                     </div>
                 </div>
 
-                <!-- 🔹 Contenidos -->
+                <!-- Contenidos -->
                 <div class="col-md-12 form-floating mb-3">
                     {{ form.contenidos }}
                     <label for="{{ form.contenidos.id_for_label }}">📚 Contenidos</label>
                 </div>
 
-                <!-- 🔹 Líneas de investigación -->
+                <!-- Líneas de investigación -->
                 <div class="col-12 mb-4">
                     <label class="fw-bold text-success">🧭 Líneas de Investigación</label>
                     <div id="lineas-container" class="lineas-grid">
@@ -92,13 +92,13 @@
                     </div>
                 </div>
 
-                <!-- 🔹 Enlace -->
+                <!-- Enlace -->
                 <div class="form-group text-center mt-3">
                     <label for="{{ form.enlace.id_for_label }}" class="form-label fw-bold">🔗 Enlace del Documento</label>
                     {{ form.enlace }}
                 </div>
 
-                <!-- 🔹 Botones -->
+                <!-- Botones -->
                 <div class="text-center mt-4">
                     <button type="submit" class="btn btn-success btn-lg px-5">💾 Guardar Cambios</button>
                     <a href="{% url 'documento_detalle' object.pk %}" class="btn btn-secondary btn-lg">❌ Cancelar</a>
@@ -109,7 +109,6 @@
     </div>
 </div>
 
-<!-- 🎨 Estilos -->
 <style>
     .lineas-grid {
         display: flex;
@@ -145,7 +144,6 @@
     }
 </style>
 
-<!-- 🧠 Script para líneas -->
 <script>
     const lineasPorCategoria = {
         electronica: {{ linea_data.electronica|safe }},

@@ -1,210 +1,164 @@
 {% extends 'base.html' %}
 {% load static %}
 
-<!-- Enlaza Font Awesome -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
 {% block content %}
-  <style>
+
+
+<div class="header d-flex justify-content-between align-items-center">
+  <img src="https://www.upn.edu.co/wp-content/uploads/2023/07/Logo-blanco-fondo-azul-UPN.jpg" alt="UPN Logo" class="header-logo">
+  <h1 class="titulo-marca-agua">📚 Trabajos de Grado - Licenciatura en Tecnología</h1>
+  <img src="https://cienciaytecnologia.upn.edu.co/wp-content/uploads/2023/04/DTE-11.png" alt="DTE Logo" class="header-logo">
+</div>
+
+
+<div class="row mt-4">
+    {% if object_list %}
+        {% for documento in object_list %}
+        <div class="col-md-4">
+            <div class="document-card" onclick="window.location='{% url 'documento_detalle' documento.pk %}'">
+                <div class="card-body">
+                    <h3 class="document-title">{{ documento.titulo|default:"(Sin título)" }}</h3>
+
+                    <div class="research-lines">
+                      {% for linea in documento.lineas_investigacion.all %}
+                        <div class="linea-item">
+                          {% if linea.nombre == "Análisis Técnica" %}
+                              <i class="fas fa-chart-line" title="{{ linea.nombre }}"></i>
+                          {% elif linea.nombre == "Diseño de Prototipos" %}
+                              <i class="fas fa-laptop-code" title="{{ linea.nombre }}"></i>
+                          {% elif linea.nombre == "Educación en y con tecnología" %}
+                              <i class="fas fa-users" title="{{ linea.nombre }}"></i>
+                          {% elif linea.nombre == "Experiencias ETIAE/MTIAE" %}
+                              <i class="fas fa-cogs" title="{{ linea.nombre }}"></i>
+                          {% elif linea.nombre == "Herramientas Digitales" %}
+                              <i class="fas fa-sliders-h" title="{{ linea.nombre }}"></i>
+                          {% elif linea.nombre == "Monografías" or linea.nombre == "Propuesta Disciplinar" %}
+                              <i class="fas fa-microchip" title="{{ linea.nombre }}"></i>
+                          {% else %}
+                              <i class="fas fa-tag" title="{{ linea.nombre }}"></i>
+                          {% endif %}
+                          <span class="linea-nombre">{{ linea.nombre }}</span>
+                        </div>
+                      {% endfor %}
+                    </div>
+                </div>
+                <div class="card-footer">
+                {% if user.is_authenticated %}
+                    <form action="{% url 'documento_confirmar_eliminar' documento.pk %}" method="POST">
+                        {% csrf_token %}
+                        <button type="submit" class="delete-icon">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-center w-100">No hay documentos disponibles.</p>
+    {% endif %}
+</div>
+
+
+<style>
     body {
-      background-color: #e0f7fa;
-      font-family: Arial, sans-serif;
+        background-color: #e0f7fa;
+        font-family: Arial, sans-serif;
     }
 
     .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px;
-      background-color: #00796b;
-      color: white;
+        background-color: #013220;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
 
-    .header h1 {
-      margin: 0;
-      color: white;
-      font-size: 24px;
+    .header-logo {
+        width: 170px;
+        height: auto;
     }
 
-    .header img {
-      width: 150px;
-      height: auto;
-    }
-
-    .document-list {
-      background-color: white;
-      border-radius: 8px;
-      padding: 20px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .document-list h1 {
-      color: #00796b;
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .search-bar {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-
-    .search-bar input[type="text"] {
-      width: 50%;
-      padding: 10px;
-      border: 2px solid #00796b;
-      border-radius: 5px;
-      font-size: 16px;
+    .titulo-marca-agua {
+        color: white;
+        font-size: 40px;
+        font-weight: bold;
+        text-transform: uppercase;
+        text-shadow: 2px 2px 5px rgba(0,0,0,0.3);
     }
 
     .document-card {
-      border: 3px solid #00796b;
-      border-radius: 10px;
-      transition: box-shadow 0.3s ease-in-out;
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-      padding: 15px;
-      margin-bottom: 20px;
+        border: 3px solid #00796b;
+        border-radius: 10px;
+        transition: box-shadow 0.3s ease-in-out;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        padding: 15px;
+        margin-bottom: 20px;
     }
 
     .document-card:hover {
-      box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+        box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
     }
 
     .document-title {
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-
-    .linea-item {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      background-color: #e0f2f1;
-      border-radius: 8px;
-      padding: 4px 8px;
-      font-size: 14px;
-    }
-
-    .linea-nombre {
-      color: #004d40;
-      font-weight: 500;
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 10px;
     }
 
     .research-lines {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 5px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 5px;
+    }
+
+    .linea-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        background-color: #e0f2f1;
+        border-radius: 8px;
+        padding: 4px 8px;
+        font-size: 14px;
+    }
+
+    .linea-nombre {
+        color: #004d40;
+        font-weight: 500;
     }
 
     .research-lines i {
-      font-size: 18px;
-      color: #00796b;
-      cursor: pointer;
-      transition: transform 0.2s ease-in-out;
+        font-size: 18px;
+        color: #00796b;
+        cursor: pointer;
+        transition: transform 0.2s ease-in-out;
     }
 
     .research-lines i:hover {
-      transform: scale(1.2);
+        transform: scale(1.2);
     }
 
     .delete-icon {
-      background: none;
-      border: none;
-      color: #d32f2f;
-      font-size: 20px;
-      cursor: pointer;
-      position: absolute;
-      right: 15px;
-      bottom: 15px;
-      z-index: 20;
+        background: none;
+        border: none;
+        color: #d32f2f;
+        font-size: 20px;
+        cursor: pointer;
+        position: absolute;
+        right: 15px;
+        bottom: 15px;
+        z-index: 20;
     }
 
     .delete-icon:hover {
-      color: #b71c1c;
+        color: #b71c1c;
     }
-  </style>
+</style>
 
-  <div class="header">
-    <img src="https://www.upn.edu.co/wp-content/uploads/2023/07/Logo-blanco-fondo-azul-UPN.jpg" alt="UPN Logo">
-    <h1>Trabajos de Grado - Licenciatura en Tecnología</h1>
-    <img src="https://cienciaytecnologia.upn.edu.co/wp-content/uploads/2023/04/DTE-11.png" alt="DTE Logo">
-  </div>
-
-  <div class="document-list">
-    <h1>Repositorio Digital</h1>>
-
-    <div id="document-list">
-      {% for documento in object_list %}
-        <div class="document-card" onclick="window.location='{% url 'documento_detalle' documento.pk %}'">
-          <div class="document-title">{{ documento.titulo|default:"(Sin título)" }}</div>
-
-          <div class="research-lines">
-            {% for linea in documento.lineas_investigacion.all %}
-              <div class="linea-item">
-                {% if linea.nombre == "Análisis Técnica" %}
-                  <i class="fas fa-chart-line" title="{{ linea.nombre }}"></i>
-                {% elif linea.nombre == "Diseño de Prototipos" %}
-                  <i class="fas fa-laptop-code" title="{{ linea.nombre }}"></i>
-                {% elif linea.nombre == "Educación en y con tecnología" %}
-                  <i class="fas fa-users" title="{{ linea.nombre }}"></i>
-                {% elif linea.nombre == "Experiencias ETIAE/MTIAE" %}
-                  <i class="fas fa-cogs" title="{{ linea.nombre }}"></i>
-                {% elif linea.nombre == "Herramientas Digitales" %}
-                  <i class="fas fa-sliders-h" title="{{ linea.nombre }}"></i>
-                {% elif linea.nombre == "Monografías" or linea.nombre == "Propuesta Disciplinar" %}
-                  <i class="fas fa-microchip" title="{{ linea.nombre }}"></i>
-                {% else %}
-                  <i class="fas fa-tag" title="{{ linea.nombre }}"></i>
-                {% endif %}
-                <span class="linea-nombre">{{ linea.nombre }}</span>
-              </div>
-            {% endfor %}
-          </div>
-
-          {% if user.is_authenticated %}
-            <form action="{% url 'documento_confirmar_eliminar' documento.pk %}" method="POST">
-              {% csrf_token %}
-              <button type="submit" class="delete-icon">
-                <i class="fas fa-trash-alt"></i>
-              </button>
-            </form>
-          {% endif %}
-        </div>
-      {% endfor %}
-    </div>
-  </div>
-
-  <script>
-    document.getElementById('search-input').addEventListener('input', function() {
-      const query = this.value;
-      const xhr = new XMLHttpRequest();
-      xhr.open('GET', `{% url 'documento_busqueda_ajax' %}?q=` + query, true);
-      xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-
-      xhr.onload = function() {
-        if (xhr.status === 200) {
-          const results = JSON.parse(xhr.responseText);
-          const documentList = document.getElementById('document-list');
-          documentList.innerHTML = '';
-
-          results.forEach(function(documento) {
-            const div = document.createElement('div');
-            div.className = 'document-card';
-            div.innerHTML = `
-              <div class="document-title">${documento.titulo}</div>
-              <a href="/documento/detalle/${documento.pk}">Ver más</a>
-            `;
-            documentList.appendChild(div);
-          });
-        }
-      };
-
-      xhr.send();
-    });
-  </script>
 {% endblock %}
