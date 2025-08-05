@@ -27,12 +27,12 @@ class Documento(models.Model):
     ]
 
     # Campos existentes...
-    titulo = models.CharField(max_length=255, blank=True, null=True)
-    autor = models.CharField(max_length=255, blank=True, null=True)
-    director = models.CharField(max_length=255, blank=True, null=True)
+    titulo = models.TextField(blank=True, null=True)
+    autor = models.TextField(blank=True, null=True)
+    director = models.TextField(blank=True, null=True)
     palabras_clave = models.TextField(blank=True, null=True)
-    unidad_patrocinante = models.CharField(max_length=255, blank=True, null=True)
-    publicacion = models.CharField(max_length=255, blank=True, null=True)
+    unidad_patrocinante = models.TextField(blank=True, null=True)
+    publicacion = models.TextField(blank=True, null=True)
     descripcion = models.TextField(blank=True, null=True)
     metodologia = models.TextField(blank=True, null=True)
     contenidos = models.TextField(blank=True, null=True)
@@ -41,7 +41,7 @@ class Documento(models.Model):
     enlace = models.URLField(max_length=500, blank=True, null=True)   
     archivo = models.FileField(upload_to='documentos/', max_length=255, blank=True, null=True)
     
-    año = models.CharField(max_length=4, blank=True, null=True)
+    año = models.CharField(max_length=10, blank=True, null=True)
     categoria = models.CharField(max_length=50, choices=CATEGORIAS, default='electronica')
 
     # NUEVO: relación muchos a muchos
