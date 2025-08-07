@@ -457,10 +457,10 @@ def obtener_titulo(texto, nombre_autor=None):
 #lista de apellidos 
 APELLIDOS_COMUNES = [
     "Abella", "Acevedo", "Aldana", "Ardila", "Ariza", "Arias", "Acosta", "Barahona", "Barrera", "Beltrán", "Benítez", "Bohórquez","Bossa", "Bustamante","Buitrago",
-    "Cano", "Cárdenas", "Cely", "Casallas", "Castillo", "Castro", "Chacón", "Chuquizán", "Cifuentes", "Cordero", "Cortés","Cocunubo", "Corredor", "Díaz", "Duarte", "Estupiñán", 
-    "Escobar", "Fayad", "Florez", "Garrido", "García", "Garcia", "Gómez", "González", "Guataquí", "Guerrero", "Gutiérrez", "Hernández", "Jiménez", "Leiva", "Lopera", "López",
+    "Cano", "Cárdenas", "Carreño", "Cely", "Casallas", "Castillo", "Castro", "Chacón", "Chuquizán", "Cifuentes", "Cordero", "Cortés","Cocunubo", "Corredor", "Díaz", "Duarte", "Estupiñán", 
+    "Escobar", "Fayad", "Florez", "Garrido", "García", "Garcia", "Gómez", "González", "Guataquí", "Guerrero", "Gutiérrez", "Hernández", "Jiménez", "Junco", "Leiva", "Lopera", "López",
     "Lozano", "Mahecha", "Maldonado", "Malagón", "Marroquín", "Marín", "Martin", "Martínez", "Medina", "Merchan", "Merchán", "Montero", "Monsalve", "More", "Moreno", 
-    "Murillo", "Ordoñez","Oviedo", "Otálora", "Patiño", "Peña", "Perdomo", "Perez", "Pereira", "Pilar", "Pinzón", "Poveda", "Prieto", "Quintero", "Ramírez", "Reyes", 
+    "Murillo", "Ochoa", "Ordoñez","Oviedo", "Otálora", "Patiño", "Peña", "Perdomo", "Perez", "Pereira", "Pilar", "Pinzón", "Poveda", "Prieto", "Quintero", "Ramírez", "Reyes", 
     "Rivera", "Roberto", "Rodríguez", "Rojas","Romero", "Rua", "Rincón", "Rueda", "Salazar", "Sánchez","Sandoval", "Sarmiento","Sanabria", "Suarez", "Suárez", "Torres",
     "Téllez", "Terreros", "Urueña", "Valero", "Vargas", "Vega", "Velandia", "Velásquez","Valencia","Zamora"
 ]
