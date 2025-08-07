@@ -787,6 +787,9 @@ def extraer_metodologia(texto, cierres):
             (
                 Metodolog[íi]a\.? |
                 METODOLOG[IÍ]A |
+                METODOLOG[IÍ]A\:|
+                METODOLOG[IÍ]A\s*DEL\s*TRABAJO\s*DE\s*GRADO|
+                MÉTODO|
                 Diseño\s[Mm]etodol[oó]gico|
                 Marco\smetodol[oóÓ]gico|
                 Marco\sMetodol[oóÓ]gico|
