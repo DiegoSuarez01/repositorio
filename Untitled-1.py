@@ -1,354 +1,29 @@
-from django.conf import settings
-from django.shortcuts import render, redirect
-import fitz  # PyMuPDF
-from django.views.generic.edit import UpdateView
-from django.views.generic import CreateView, ListView, DetailView, DeleteView
-from .models import Documento
-from .forms import DocumentoForm
-from django.http import JsonResponse
-from django.urls import reverse_lazy
+    # --------------------------------------------
+# IMPORTACIÓN DE BIBLIOTECAS NECESARIAS
+# --------------------------------------------
 
-import re
-from collections import Counter
-from repositorio.models import LineaInvestigacion
-from django.utils.safestring import mark_safe
-import json
+import fitz  # PyMuPDF: biblioteca especializada para abrir y leer archivos PDF, muy eficiente y precisa en la extracción de texto.
+import re  # re (regular expressions): permite buscar patrones dentro del texto, útil para localizar datos como el autor, director, etc.
 
-from django.contrib.auth import login
-from django.contrib.auth.forms import AuthenticationForm
+import tkinter as tk  # tkinter: se utiliza para construir interfaces gráficas sencillas en Python.
+from tkinter import filedialog  # filedialog: permite abrir una ventana para seleccionar archivos desde el explorador.
 
-def login_view(request):
-    if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
-        if form.is_valid():
-            usuario = form.get_user()
-            login(request, usuario)
-            return redirect('principal')
-    else:
-        form = AuthenticationForm()
-    return render(request, 'login.html', {'form': form})
+from collections import Counter  # Counter: útil para contar la frecuencia de palabras, ideal para saber cuál es la más repetida.
 
-
-import unicodedata
-
-def normalizar(texto):
-    """
-    Convierte el texto a minúsculas y elimina acentos (tildes).
-    """
-    if not texto:
-        return ""
-    texto = texto.lower()
-    return ''.join(
-        c for c in unicodedata.normalize('NFD', texto)
-        if unicodedata.category(c) != 'Mn'
-    )
-
-def principal(request):
-    return render(request, 'principal.html')
-
-def busqueda_ajax(request):
-    query = request.GET.get('q', '')
-    resultados = []
-
-    if query:
-        query_normalizado = normalizar(query)
-        documentos = Documento.objects.all()
-
-        for doc in documentos:
-            if query_normalizado in normalizar(doc.titulo):
-                resultados.append({
-                    'id': doc.id,
-                    'titulo': doc.titulo,
-                    'autor' : doc.autor,
-                    'director' : doc.director,
-                    'metodologia' : doc.metodologia,
-                })
-            if len(resultados) >= 10:
-                break
-
-    return JsonResponse({'resultados': resultados})
-
-
-
-def buscar_documentos(request):
-    query = request.GET.get('q', '')
-    resultados = []
-
-    if query:
-        query_normalizado = normalizar(query)
-        documentos = Documento.objects.all()
-
-        for doc in documentos:
-            if (
-                query_normalizado in normalizar(doc.titulo) or
-                query_normalizado in normalizar(doc.autor or '') or
-                query_normalizado in normalizar(doc.categoria or '')
-            ):
-                resultados.append(doc)
-
-    return render(request, 'busqueda_documentos.html', {
-        'resultados': resultados,
-        'query': query
-    })
-
-def obtener_años_disponibles():
-    publicaciones = Documento.objects.values_list('publicacion', flat=True)
-    años = set()
-
-    for pub in publicaciones:
-        if pub:
-            año = detectar_año(pub)
-            if año:
-                años.add(año)
-    
-    return sorted(años)
-
-def resultados_busqueda_view(request):
-    query = request.GET.get('q', '').strip()
-    categoria_filtro = request.GET.get('categoria', '')
-    linea_filtro = request.GET.get('linea', '')
-    año_filtro = request.GET.get('año', '')
-
-    # Obtener todos los años disponibles (antes de filtrar)
-    años = Documento.objects.exclude(año__isnull=True).values_list('año', flat=True).distinct().order_by('-año')
-
-    # Obtener todos los documentos (sin filtros aún)
-    documentos = Documento.objects.all()
-
-    if query:
-        documentos = [doc for doc in documentos if normalizar(query) in normalizar(
-            ' '.join([
-                doc.titulo or '',
-                doc.autor or '',
-                doc.director or '',
-                doc.metodologia or '',
-                doc.categoria or '',
-                ' '.join([li.nombre for li in doc.lineas_investigacion.all()])
-            ])
-        )]
-
-    if categoria_filtro:
-        documentos = [doc for doc in documentos if doc.categoria == categoria_filtro]
-    
-    if linea_filtro:
-        documentos = [doc for doc in documentos if doc.lineas_investigacion.filter(nombre=linea_filtro).exists()]
-    
-    if año_filtro:
-        documentos = [doc for doc in documentos if str(doc.año) == año_filtro]
-
-    categorias = Documento.objects.values_list('categoria', flat=True).distinct()
-    lineas = LineaInvestigacion.objects.values_list('nombre', flat=True).distinct()
-
-    return render(request, 'resultados_busqueda.html', {
-        'query': query,
-        'resultados': documentos,
-        'categorias': categorias,
-        'lineas': lineas,
-        'año_filtro': año_filtro,
-        'años': años, 
-    })
-
-LINEAS_INVESTIGACION = {
-    "electronica": [
-        "Análisis Técnica", "EduTech", "Experiencias ETIAE/MTIAE",
-        "Productos – Prototipos – Tecnológicos", "Sistemas de Control", "Tecnologías Digitales"
-    ],
-    "diseno": [
-        "Análisis_Técnica", "Diseño de Prototipos", "Educación en y con tecnología",
-        "Experiencias ETIAE/MTIAE", "Herramientas Digitales", "Monografías", "Propuesta Disciplinar"
-    ],
-    "tecnologia": [
-        "Análisis Técnica", "Diseño de Prototipos", "Educación en y con tecnología",
-        "Experiencias ETIAE/MTIAE", "Herramientas Digitales", "Monografías", "Propuesta Disciplinar"
-    ]
-}
-def asegurar_lineas_investigacion():
-    from .models import LineaInvestigacion
-    for categoria, nombres in LINEAS_INVESTIGACION.items():
-        for nombre in nombres:
-            LineaInvestigacion.objects.get_or_create(nombre=nombre)
-
-class DocumentoUpdateView(UpdateView):
-    
-    model = Documento
-    form_class = DocumentoForm
-    template_name = 'documento_editar.html'
-    login_url = 'login'
-
-    def get_success_url(self):
-        return reverse_lazy('documento_detalle', kwargs={'pk': self.object.pk})
-
-    def get_context_data(self, **kwargs):
-        asegurar_lineas_investigacion()
-        context = super().get_context_data(**kwargs)
-        
-        # Generar lista con id y nombre para cada línea
-        linea_data = {}
-        for categoria, nombres in LINEAS_INVESTIGACION.items():
-            lineas = LineaInvestigacion.objects.filter(nombre__in=nombres)
-            linea_data[categoria] = [
-                {"id": linea.id, "nombre": linea.nombre} for linea in lineas
-            ]
-        
-        context["linea_data"] = {
-            k: mark_safe(json.dumps(v)) for k, v in linea_data.items()
-        }
-    
-        return context
-
-class DocumentoEliminarView(DeleteView):
-    login_url = 'login'
-    model = Documento
-    template_name = 'documento_confirmar_eliminar.html' 
-    
-    def get_success_url(self):
-        documento = self.get_object()
-        return reverse_lazy(f"lic_{documento.categoria.lower()}") if documento.categoria else reverse_lazy('principal')
-
-import requests
-import tempfile
-
-    
-class DocumentoCreateView(CreateView):
-    login_url = 'login'
-    model = Documento
-    form_class = DocumentoForm
-    template_name = 'documento_form.html'
-
-    def get_success_url(self):
-        if self.object:
-            if self.object.categoria == "electronica":
-                return reverse_lazy('lic_electronica')
-            elif self.object.categoria == "diseno":
-                return reverse_lazy('lic_diseno')
-            elif self.object.categoria == "tecnologia":
-                return reverse_lazy('lic_tecnologia')
-        return reverse_lazy('principal')
-    
-    def get_context_data(self, **kwargs):
-        asegurar_lineas_investigacion()
-        context = super().get_context_data(**kwargs)
-        
-        # Generar lista con id y nombre para cada línea
-        linea_data = {}
-        for categoria, nombres in LINEAS_INVESTIGACION.items():
-            lineas = LineaInvestigacion.objects.filter(nombre__in=nombres)
-            linea_data[categoria] = [
-                {"id": linea.id, "nombre": linea.nombre} for linea in lineas
-            ]
-        
-        context["linea_data"] = {
-            k: mark_safe(json.dumps(v)) for k, v in linea_data.items()
-        }
-    
-        return context
-
-    def form_valid(self, form):
-        documento = form.save(commit=False)
-        archivo_pdf = None
-    
-        if documento.archivo:
-            try:
-                archivo_url = documento.archivo.url
-                response = requests.get(archivo_url)
-                if response.status_code == 200:
-                    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
-                        tmp_file.write(response.content)
-                        archivo_pdf = tmp_file.name
-                else:
-                    print(f"❌ Error al obtener el archivo desde S3. Código: {response.status_code}")
-            except Exception as e:
-                print("❌ Error descargando archivo desde S3:", e)
-    
-        # Si no hay archivo subido, pero sí un enlace manual
-        elif documento.enlace:
-            try:
-                response = requests.get(documento.enlace)
-                if response.status_code == 200:
-                    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
-                        tmp_file.write(response.content)
-                        archivo_pdf = tmp_file.name
-                else:
-                    print("❌ Error descargando el PDF desde el enlace.")
-            except Exception as e:
-                print("❌ Error en la descarga desde enlace:", e)
-    
-
-        if not archivo_pdf:
-            form.add_error(None, "No se pudo obtener el archivo. Verifica el archivo o el enlace.")
-            return self.form_invalid(form)
-    
-        texto, num_paginas, ruta_pdf = extraer_texto(archivo_pdf)
-        info_extraida = procesar_documento(archivo_pdf) or {}
-    
-        info_general = info_extraida.get("Información General", {})
-        documento.año = detectar_año(texto)
-        documento.titulo = info_general.get("TÍTULO", "No disponible")
-        documento.autor = info_general.get("AUTOR(ES)", "No disponible")
-        documento.director = info_general.get("DIRECTOR", "No registrado")
-        documento.palabras_clave = info_general.get("PALABRAS CLAVE", "No disponibles")
-        documento.unidad_patrocinante = info_general.get("UNIDAD PATROCINANTE", "No disponible")
-        documento.publicacion = info_general.get("PUBLICACIÓN", "No disponible")
-        documento.descripcion = info_extraida.get("Descripción", "No disponible")
-        documento.metodologia = info_extraida.get("Metodología", "No disponible")
-        documento.contenidos = info_extraida.get("Contenidos", "No disponible")
-        documento.conclusiones = info_extraida.get("Conclusiones", "No disponible")
-    
-        fuentes = info_extraida.get("Fuentes", "No disponible")
-        documento.fuentes = "\n".join(fuentes) if isinstance(fuentes, list) else fuentes
-    
-        # Guardar categoría y líneas
-        lineas_ids = self.request.POST.getlist("lineas_investigacion")
-        documento.categoria = form.cleaned_data['categoria']
-        documento.save()
-        documento.lineas_investigacion.set(lineas_ids)
-    
-        return redirect(self.get_success_url())
-        
-# Vistas de las licenciaturas
-class DocumentoEView(ListView):
-    model = Documento
-    template_name = 'lic_electronica.html'
-    context_object_name = 'object_list'
-
-    def get_queryset(self):
-        return Documento.objects.filter(categoria__iexact='electronica')
-
-class DocumentoDView(ListView):
-    model = Documento
-    template_name = 'lic_diseno.html'
-    context_object_name = 'object_list'
-
-    def get_queryset(self):
-        return Documento.objects.filter(categoria__iexact='diseno')
-
-class DocumentoTView(ListView):
-    model = Documento
-    template_name = 'lic_tecnologia.html'
-    context_object_name = 'object_list'
-
-    def get_queryset(self):
-        return Documento.objects.filter(categoria__iexact='tecnologia')
-
-class DocumentoDetailView(DetailView):
-    model = Documento
-    template_name = 'documento_detalle.html'
-
-# ----------- EXTRACCIÓN DE INFORMACIÓN -----------
-#..................................................
 
 def extraer_texto(pdf_path):
     # Abrir el archivo PDF
     doc = fitz.open(pdf_path)
     num_paginas = len(doc)
-
+    
     # Extraer el texto de cada página
     texto = ""
     for pagina in doc:
         texto += pagina.get_text()
-
+    
     # Devolver el texto y el número de páginas
     return texto, num_paginas, pdf_path
+
 
 def eliminar_tabla_contenido(doc):
     """
@@ -363,7 +38,7 @@ def eliminar_tabla_contenido(doc):
         texto_pagina = pagina.get_text()
         lineas = texto_pagina.splitlines()
 
-        # Paso 1: detectar inicio del índice
+        # Detecta el título de la tabla de contenido
         if not eliminar:
             if re.search(r"(?i)(TABLA\s+DE\s+CONTENIDO|Índice\s+de\s+contenido|Contenido|Tabla\s+de\s+contenidos)", texto_pagina):
                 eliminar = True
@@ -371,7 +46,7 @@ def eliminar_tabla_contenido(doc):
                 print(f"📌 Tabla de contenido detectada en página {i+1}, analizando siguientes páginas...")
                 continue
 
-        #  Paso 2: si estamos eliminando, revisar si esta página es índice (basado en numeraciones)
+        # Si estamos eliminando, revisar si esta página es índice (basado en numeraciones)
         if eliminar and saltando:
             total = len(lineas)
             if total == 0:
@@ -389,12 +64,27 @@ def eliminar_tabla_contenido(doc):
             else:
                 saltando = False  # Ya no estamos en tabla de contenido
 
-        # Paso 3: conservar el resto de las páginas
+        # Conservar el resto de las páginas
         texto_total += texto_pagina
 
     return texto_total
 
-# Esta función intenta extraer el título de un texto (por ejemplo, el de un PDF convertido)
+
+import unicodedata
+# Esta función limpia un texto eliminando tildes, convirtiendo todo a minúsculas
+# y eliminando espacios y caracteres especiales
+def normalizar(texto):
+    # Separa los caracteres acentuados en su base y el acento (NFD = Normal Form Decomposed)
+    texto = unicodedata.normalize('NFD', texto)
+    # Elimina los acentos y otros caracteres no ASCII
+    texto = texto.encode('ascii', 'ignore').decode('utf-8')
+    # Convierte todo a minúsculas
+    texto = texto.lower()
+    # Elimina todos los espacios (entre palabras, saltos de línea, etc.)
+    texto = re.sub(r'\s+', '', texto)
+    return texto
+
+# Esta función intenta extraer el título de un texto
 # Ignora encabezados típicos y se detiene si encuentra el nombre del autor
 def obtener_titulo(texto, nombre_autor=None):
     """
@@ -457,15 +147,15 @@ def obtener_titulo(texto, nombre_autor=None):
 #lista de apellidos 
 APELLIDOS_COMUNES = [
     "Abella", "Acevedo", "Aldana", "Ardila", "Ariza", "Arias", "Acosta", "Barahona", "Barrera", "Beltrán", "Benítez", "Bohórquez","Bossa", "Bustamante","Buitrago",
-    "Cano", "Cárdenas", "Cely", "Casallas", "Castillo", "Castro", "Chacón", "Chuquizán", "Cifuentes", "Cordero", "Cortés","Cocunubo", "Corredor", "Díaz", "Duarte", "Estupiñán", 
-    "Escobar", "Fayad", "Florez", "Garrido", "García", "Garcia", "Gómez", "González", "Guataquí", "Guerrero", "Gutiérrez", "Hernández", "Jiménez", "Leiva", "Lopera", "López",
+    "Cano", "Cárdenas", "Cely", "Casallas", "Castillo", "Castro", "Chacón", "Cifuentes", "Cordero", "Cortés","Cocunubo", "Corredor", "Díaz", "Duarte", "Estupiñán", 
+    "Escobar", "Fayad", "Florez","García", "Garcia", "Gómez", "González", "Guataquí", "Guerrero", "Gutiérrez", "Hernández", "Jiménez", "Leiva", "Lopera", "López",
     "Lozano", "Mahecha", "Maldonado", "Malagón", "Marroquín", "Marín", "Martin", "Martínez", "Medina", "Merchan", "Merchán", "Montero", "Monsalve", "More", "Moreno", 
     "Murillo", "Ordoñez","Oviedo", "Otálora", "Patiño", "Peña", "Perdomo", "Perez", "Pereira", "Pilar", "Pinzón", "Poveda", "Prieto", "Quintero", "Ramírez", "Reyes", 
     "Rivera", "Roberto", "Rodríguez", "Rojas","Romero", "Rua", "Rincón", "Rueda", "Salazar", "Sánchez","Sandoval", "Sarmiento","Sanabria", "Suarez", "Suárez", "Torres",
     "Téllez", "Terreros", "Urueña", "Valero", "Vargas", "Vega", "Velandia", "Velásquez","Valencia","Zamora"
 ]
 
-
+#Filtra los nombres encontrados  y elimina los que no corresponda 
 def detectar_nombres_por_apellidos(texto, apellidos_comunes):
     etiquetas = [
         "autor(es):", "autor:", "presentado por:", "asesor:", "asesora:",
@@ -508,7 +198,7 @@ def detectar_nombres_por_apellidos(texto, apellidos_comunes):
         linea_anterior = linea  # actualizar para la próxima vuelta
 
     return nombres_detectados
-
+#Función para eliminar autores encontrados dentro de agradecimientos
 def es_nombre_valido(texto):
     texto = texto.lower()
     palabras_prohibidas = [
@@ -562,7 +252,7 @@ def extraer_info_sin_formato_rae(texto, num_paginas, ruta_pdf):
         nombres_unicos = []
     
         for nombre in posibles_nombres:
-            if nombre not in vistos and es_nombre_valido(nombre):
+            if nombre not in vistos and es_nombre_valido(nombre):  # <- asumes que ya tienes esta función
                 vistos.add(nombre)
                 nombres_unicos.append(nombre)
             if len(nombres_unicos) == 3:
@@ -589,12 +279,13 @@ def extraer_info_sin_formato_rae(texto, num_paginas, ruta_pdf):
 
     return info
 
+
 def extraer_descripcion(texto, cierres):
     contenido_dec = ""
     for cierre in cierres:
         matches = list(re.finditer(
-            rf"\s*(\d+\s*\.\s*)?(Introducci[oó]n|INTRODUCCI[OÓ]N|Introducci[oó]n\s*y\s*aspectos\s0*generales|CAP[IÌ]TULO I|Resumen|RESUMEN|Resumen\.|Resumen\s*Ejecutivo|Resumen\s*ejecutivo)\s*\n([\s\S]*?){cierre}",
-            texto,  
+            rf"\s*(\d+\s*\.\s*)?(Introducci[oó]n|INTRODUCCI[OÓ]N|Introducci[oó]n\s*y\s*aspectos\s0*generales|CAP[IÌ]TULO I|Resumen|RESUMEN|Resumen\.|Resumen\s*Ejecutivo)\s*\n([\s\S]*?){cierre}",
+            texto,
             re.MULTILINE | re.DOTALL
         ))
 
@@ -712,7 +403,7 @@ def extraer_palabras_clave(titulo, descripcion, metodologia, cantidad=7):
         'fase','documento','busca','buscar','unidad','analogías','figura','partir',
         'recorrido','ello','realizó','tipo','plantear','licenciatura','cabo','encuentran',
         'descritas','abordamos','específico','taller','aplicadas','revisión','muestra',
-        'roles','participación','está','genere','dentro'
+        'roles','participación','está','genere'
     }
 
     #  Extraer solo palabras de 3 o más letras
@@ -732,7 +423,9 @@ def extraer_contenidos(texto):
     Extrae la sección de Contenidos a partir de un encabezado común (índice, tabla de contenido, etc.)
     y devuelve una lista numerada limpia.
     """
-    import re
+    
+    import re #Se colocó de nuevo la biblioteca porque no la detectaba
+    
     # Buscar encabezado entre múltiples variantes
     encabezado_patron = re.compile(
         r'\b(Tabla\s*de\s*contenido|Índice\s*de\s*contenido|Tabla\s+de\s+Contenidos|Contenido|ÍNDICE|TABLA\s*DE\s*CONTENIDO)\b',
@@ -906,13 +599,13 @@ def extraer_secciones_sin_formato_rae(texto, num_paginas, ruta_pdf):
     # Abrimos el documento
     doc = fitz.open(ruta_pdf)
 
-    # Extraer CONTENIDOS antes de eliminar la tabla
+    # 1. Extraer CONTENIDOS antes de eliminar la tabla
     contenidos = extraer_contenidos(texto)
 
-    # Eliminar tabla de contenido directamente desde el documento
+    # 2. Eliminar tabla de contenido directamente desde el documento
     texto = eliminar_tabla_contenido(doc)
 
-    # Limpiar numeraciones sueltas (después de eliminar tabla)
+    # 3. Limpiar numeraciones sueltas (después de eliminar tabla)
     texto = re.sub(r'\n\s*\d+\s*\n', '', texto)
 
     cierres = [
@@ -920,7 +613,7 @@ def extraer_secciones_sin_formato_rae(texto, num_paginas, ruta_pdf):
         r"(?=\.\s*\n)"          # Coincidencia por punto seguido de salto de línea
     ]
 
-    # Extraer otras secciones con el texto limpio
+    # 4. Extraer otras secciones con el texto limpio
     secciones = {
         "Información General": extraer_info_sin_formato_rae(texto, num_paginas, ruta_pdf),
         "Descripción": extraer_descripcion(texto, cierres),
@@ -930,7 +623,7 @@ def extraer_secciones_sin_formato_rae(texto, num_paginas, ruta_pdf):
         "Conclusiones": extraer_conclusiones(texto, cierres)
     }
 
-    # Palabras clave inferidas con base en otras secciones
+    # 5. Palabras clave inferidas con base en otras secciones
     info_general = secciones.get("Información General", {})
     titulo = info_general.get("TÍTULO", "")
     descripcion = secciones["Descripción"]
@@ -939,36 +632,42 @@ def extraer_secciones_sin_formato_rae(texto, num_paginas, ruta_pdf):
 
     return secciones
 
-
     
 def extraer_palabras_c(texto):
-    """
-    Extrae las palabras clave desde la sección "Palabras Clave" en formato RAE,
-    deteniéndose en la siguiente sección, por ejemplo "2. Descripción".
-    """
-    # Buscar inicio de la sección
-    match = re.search(r"(?i)Palabras\s+Claves?\s*:?\s*", texto)
-    if not match:
+    patron = re.compile(
+        r"(?i)Palabras(?:\s+Claves?)?\s*:?\s*\n*([\s\S]{0,400})"
+    )
+    coincidencia = patron.search(texto)
+    if not coincidencia:
         return None
 
-    inicio = match.end()
-    texto_restante = texto[inicio:]
+    seccion = coincidencia.group(1)
+    lineas = seccion.strip().splitlines()
+    palabras_clave = []
 
-    # Cortar cuando aparezca el título de la siguiente sección
-    fin_match = re.search(r"\b2\.\s*Descripción\b", texto_restante)
-    if fin_match:
-        texto_palabras = texto_restante[:fin_match.start()]
-    else:
-        texto_palabras = texto_restante[:300]  # fallback
+    for linea in lineas:
+        linea = linea.strip()
+        if not linea:
+            continue
 
-    # Unir líneas partidas, quitar saltos de línea
-    texto_plano = " ".join(texto_palabras.splitlines())
+        # Detenerse si hay un número (por seguridad)
+        if re.search(r"\b\d+\b", linea):
+            break
 
-    # Eliminar comas o puntos finales aislados y limpiar espacios extra
-    texto_plano = re.sub(r"\s{2,}", " ", texto_plano).strip()
-    texto_plano = re.sub(r"[,.]+\s*$", "", texto_plano)
+        # Separar por punto y coma o por coma
+        if ';' in linea:
+            palabras = [p.strip() for p in linea.split(';') if p.strip()]
+            palabras_clave.extend(palabras)
+        elif ',' in linea:
+            palabras = [p.strip() for p in linea.split(',') if p.strip()]
+            palabras_clave.extend(palabras)
+        else:
+            # Si no hay separador y hay más de 3 palabras, se asume que no es parte de palabras clave
+            if len(linea.split()) > 3:
+                break
+            palabras_clave.append(linea)
 
-    return texto_plano if texto_plano else None
+    return ', '.join(palabras_clave).strip() if palabras_clave else None
 
 def extraer_titulo_rae(texto):
     patron = re.compile(
@@ -993,7 +692,7 @@ def extraer_info_general(texto):
         "FECHA DE PUBLICACIÓN": "No disponible",
     }
 
-    # Extraer título (tomando hasta 6 líneas)
+    # Extraer título (tomando hasta 6 líneas para evitar truncamientos)
     titulo = extraer_titulo_rae(texto)
     if titulo:
         info["TÍTULO"] = titulo
@@ -1002,23 +701,23 @@ def extraer_info_general(texto):
     if match_info_general:
         texto_info_general = match_info_general.group(1)
 
-        # Patrones específicos
+        # Aplicar patrones individuales (excepto palabras clave)
         patrones = {
-            "AUTOR(ES)": (r"(?is)(autor(?:\(es\))?|author(?:\(is\))?)\s*:?\s*(.*?)\s*(?:director|tutor|jurado|asesor)", 2),
-            "DIRECTOR": (r"(?i)director\s*:?\s*\n*([^\n]+)", 1),
-            "UNIDAD PATROCINANTE": (r"(?i)unidad\s*\n*patrocinante\s*:?\s*(.+)", 1),
-            "FECHA DE PUBLICACIÓN": (r"(?i)(publicaci[oó]n\s*:?|publication\s*:?)\s*(.*?)(?=\n\s*(unidad\s*patrocinante|palabras\s*clave|$))", 2)
+            "AUTOR(ES)": r"(?is)autor(?:\(es\))?\s*:?\s*(.*?)\s*(?:director|tutor|jurado|asesor)",
+            "DIRECTOR": r"(?i)director\s*:?\s*\n*([^\n]+)",
+            "UNIDAD PATROCINANTE": r"(?i)unidad\s*\n*patrocinante\s*:?\s*(.+)",
+            "FECHA DE PUBLICACIÓN": r"(?i)publicaci[oó]n\s*:?\s*(.*?)(?=\n\s*unidad\s*\n*patrocinante)"
         }
 
-        for clave, (patron, grupo) in patrones.items():
+        for clave, patron in patrones.items():
             match = re.search(patron, texto_info_general)
             if match:
-                info[clave] = match.group(grupo).strip()
+                info[clave] = match.group(1).strip()
 
-    # Usar función especializada para palabras clave
-    palabras_clave = extraer_palabras_c(texto)
-    if palabras_clave:
-        info["PALABRAS CLAVE"] = palabras_clave
+        # Usar función especializada para palabras clave
+        palabras_clave = extraer_palabras_c(texto_info_general)
+        if palabras_clave:
+            info["PALABRAS CLAVE"] = palabras_clave
 
     return info
 
@@ -1038,7 +737,7 @@ def extraer_secciones(texto, num_paginas):
         "Metodología": r"(?i)(?:4|5)\.\s*Metodología\s*(.*?)(?=\n\d+\.\s|\Z)",
         # Usamos grupo no capturante (?:...) para que solo capture el contenido real
         "Conclusiones": r"(?i)(?:5|6)\.\s*(?:Conclusión|Conclusiones)\s*(.*?)(?=\n(?:Elaborado por|Revisado por|Bibliografía|Referencias|\Z))",
-        "Contenidos": r"(?i)(?:4|3)\.\s*Contenidos?\s*:?\s*\n*([\s\S]+?)(?=\n5\.)",
+        "Contenidos": r"(?i)(?:4|3)\.\s*Contenidos\s*:?\s*\n*([\s\S]+?)(?=\n5\.)",
     }
 
     for seccion, patron in patrones.items():
@@ -1098,3 +797,55 @@ def procesar_documento(path_pdf):
     secciones = secciones or {}
 
     return {**info_general, **secciones}
+    
+
+def seleccionar_multiples_pdfs():
+    """ Permite seleccionar varios PDFs y muestra la información de cada uno en consola. """
+    root = tk.Tk()
+    root.geometry("400x150")
+    root.title("Seleccionar varios PDFs")
+
+    def abrir_archivos():
+        archivos_pdf = filedialog.askopenfilenames(filetypes=[("Archivos PDF", "*.pdf")])
+
+        if archivos_pdf:
+            for archivo_pdf in archivos_pdf:
+                print(f"\n Archivo seleccionado: {archivo_pdf}\n")
+                # Extraemos el texto y el número de páginas del PDF
+                texto, num_paginas, ruta_pdf = extraer_texto(archivo_pdf)
+                
+                # Procesamos el documento para extraer la información
+                info_extraida = procesar_documento(archivo_pdf)
+                
+                print("🔹 **Información General**")
+                if "Información General" in info_extraida and info_extraida["Información General"]:
+                    for clave, valor in info_extraida["Información General"].items():
+                        print(f"   - {clave}: {valor}\n")
+                
+                print("\n🔹 **Descripción**")
+                print(info_extraida["Descripción"])
+               
+                print("\n🔹 **Fuentes**")
+                print(info_extraida["Fuentes"])
+
+                print("\n🔹 **Metodología**")
+                print(info_extraida["Metodología"])
+             
+                print("\n🔹 **Contenidos**")
+                print(info_extraida["Contenidos"])
+                
+                print("\n🔹 **Conclusiones**")
+                print(info_extraida["Conclusiones"])
+                print("\n" + "="*70 + "\n")
+               
+        else:
+            print("\n No se seleccionó ningún archivo.")
+        
+        root.destroy()
+
+    btn = tk.Button(root, text="Seleccionar PDFs", command=abrir_archivos, font=("Arial", 12), bg="green", fg="white")
+    btn.pack(pady=50)
+    
+    root.mainloop()
+# Ejecutar selección de archivo
+seleccionar_multiples_pdfs()
